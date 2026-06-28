@@ -1,78 +1,118 @@
 {% extends "base.html" %}
 
 {% block title %}Apply — {{ scholarship.title }}{% endblock %}
-{% block page_title %}Apply for Scholarship{% endblock %}
+{% block page_title %}Scholarship Application{% endblock %}
+{% block page_subtitle %}<p class="page-subtitle">{{ scholarship.title }}</p>{% endblock %}
 {% block page_actions %}
-  <a href="{{ url_for('student.scholarship_detail', scholarship_id=scholarship.id) }}" class="btn btn-secondary">← Back</a>
+  <a href="{{ url_for('student.scholarship_detail', scholarship_id=scholarship.id) }}" class="btn btn-secondary">← Back to Scholarship</a>
 {% endblock %}
 
 {% block sidebar %}{% include "shared/sidebar_student.html" %}{% endblock %}
 
 {% block content %}
+
+{# ── Eligibility banner ── #}
+{% if eligibility.eligible == false %}
+<div style="background:#fffbeb; border:1px solid #fde68a; border-radius:var(--radius-lg); padding:14px 18px; margin-bottom:24px; display:flex; gap:12px;">
+  <span style="color:#d97706; font-size:1rem; flex-shrink:0;">⚠</span>
+  <div>
+    <div style="font-weight:600; color:#92400e; font-size:0.875rem;">You may not meet all eligibility requirements</div>
+    <ul style="margin:6px 0 0; padding-left:18px; color:#92400e; font-size:0.8125rem;">
+      {% for reason in eligibility.reasons %}<li>{{ reason }}</li>{% endfor %}
+    </ul>
+    <p style="margin:8px 0 0; font-size:0.8rem; color:#b45309;">You can still submit — the donor reviews every application individually.</p>
+  </div>
+</div>
+{% elif eligibility.eligible == true %}
+<div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:var(--radius-lg); padding:12px 18px; margin-bottom:24px; color:#15803d; font-size:0.875rem;">
+  ✓ You meet all eligibility requirements for this scholarship.
+</div>
+{% endif %}
+
 <div class="two-col" style="align-items:start;">
 
+  {# ── Left column: scholarship summary ── #}
   <div>
     <div class="form-section" style="margin-bottom:20px;">
       <div class="form-section-title">Scholarship Summary</div>
       <div class="detail-block">
-        <div class="detail-label">Title</div>
-        <div class="detail-value fw-600">{{ scholarship.title }}</div>
+        <div class="detail-label">Award Amount</div>
+        <div class="detail-value fw-600" style="color:var(--color-success); font-size:1.25rem;">{{ format_currency(scholarship.amount) }}</div>
       </div>
       <div class="detail-block">
-        <div class="detail-label">Amount</div>
-        <div class="detail-value fw-600" style="color:var(--color-success);">{{ format_currency(scholarship.amount) }}</div>
-      </div>
-      <div class="detail-block">
-        <div class="detail-label">Donor</div>
+        <div class="detail-label">Offered By</div>
         <div class="detail-value">{{ scholarship.donor.display_name }}</div>
       </div>
       <div class="detail-block">
         <div class="detail-label">Deadline</div>
-        <div class="detail-value">{{ format_date(scholarship.deadline) if scholarship.deadline else 'No deadline' }}</div>
+        <div class="detail-value">{{ format_date(scholarship.deadline) if scholarship.deadline else 'No deadline set' }}</div>
       </div>
+      {% if scholarship.criteria %}
+      <div class="detail-block">
+        <div class="detail-label">Requirements</div>
+        <div class="detail-value text-sm td-muted">{{ scholarship.criteria.as_display_string() }}</div>
+      </div>
+      {% endif %}
     </div>
 
-    {% if eligibility.eligible == false %}
-    <div class="flash flash-warning" style="position:static; max-width:100%; margin-bottom:20px;">
-      <div>
-        <strong>You may not meet all requirements:</strong>
-        <ul style="margin:8px 0 0; padding-left:18px;">
-          {% for reason in eligibility.reasons %}
-          <li style="font-size:0.8125rem;">{{ reason }}</li>
-          {% endfor %}
-        </ul>
-        <p style="margin:8px 0 0; font-size:0.8rem;">You can still apply — the donor will review all applications.</p>
-      </div>
+    <div class="form-section" style="background:#f8fafc;">
+      <div class="form-section-title">Application Guidelines</div>
+      <ul style="margin:0; padding-left:18px; font-size:0.8125rem; color:var(--color-text-muted); line-height:2;">
+        <li>Be specific — vague statements are less convincing</li>
+        <li>Personal statement must be at least 150 characters</li>
+        <li>Financial need and intended use: at least 50 characters each</li>
+        <li>You can only submit one application per scholarship</li>
+        <li>Pending applications can be withdrawn before a decision</li>
+      </ul>
     </div>
-    {% elif eligibility.eligible == true %}
-    <div class="flash flash-success" style="position:static; max-width:100%; margin-bottom:20px;">
-      <span>✓ You meet all eligibility requirements for this scholarship.</span>
-    </div>
-    {% endif %}
   </div>
 
+  {# ── Right column: application form ── #}
   <div>
-    <div class="form-section">
-      <div class="form-section-title">Your Application Statement</div>
-      <form method="POST" action="{{ url_for('student.apply', scholarship_id=scholarship.id) }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <form method="POST" action="{{ url_for('student.apply', scholarship_id=scholarship.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-        <div class="form-group">
-          <label for="application_message">
-            Personal Statement
-            <span class="label-optional">(minimum 50 characters)</span>
-          </label>
-          <textarea id="application_message" name="application_message" rows="12"
-            placeholder="Tell the donor about yourself, your goals, your achievements, and why you deserve this scholarship…" required minlength="50"></textarea>
-          <p class="form-hint">Include your academic goals, financial need, achievements, and how this scholarship will help you.</p>
+      <div class="form-section" style="margin-bottom:20px;">
+        <div class="form-section-title">1 — Personal Statement</div>
+        <p style="margin:0 0 14px; font-size:0.8125rem; color:var(--color-text-muted);">
+          Explain who you are, your academic achievements, and why you deserve this scholarship. Be specific and genuine.
+        </p>
+        <div class="form-group" style="margin-bottom:0;">
+          <textarea name="personal_statement" rows="8" minlength="150" required
+            placeholder="Describe your academic background, goals, and why you are a strong candidate for this scholarship. Include any relevant achievements, challenges you've overcome, and your future aspirations…"></textarea>
+          <p class="form-hint">Minimum 150 characters. Be specific — generic statements are less persuasive.</p>
         </div>
+      </div>
 
-        <div style="display:flex; gap:10px;">
-          <button type="submit" class="btn btn-primary">Submit Application</button>
-          <a href="{{ url_for('student.scholarships') }}" class="btn btn-secondary">Cancel</a>
+      <div class="form-section" style="margin-bottom:20px;">
+        <div class="form-section-title">2 — Financial Need</div>
+        <p style="margin:0 0 14px; font-size:0.8125rem; color:var(--color-text-muted);">
+          Describe your financial situation and why you need this scholarship to continue your education.
+        </p>
+        <div class="form-group" style="margin-bottom:0;">
+          <textarea name="financial_need" rows="5" minlength="50" required
+            placeholder="Describe your financial circumstances — e.g. family income, work situation, existing debts or expenses, and how they impact your ability to fund your education…"></textarea>
+          <p class="form-hint">Minimum 50 characters.</p>
         </div>
-      </form>
-    </div>
+      </div>
+
+      <div class="form-section" style="margin-bottom:24px;">
+        <div class="form-section-title">3 — Intended Use of Funds</div>
+        <p style="margin:0 0 14px; font-size:0.8125rem; color:var(--color-text-muted);">
+          Explain exactly how you plan to use the scholarship money. Be as specific as possible.
+        </p>
+        <div class="form-group" style="margin-bottom:0;">
+          <textarea name="intended_use" rows="5" minlength="50" required
+            placeholder="Describe specifically what the funds will cover — tuition, books, housing, lab fees, equipment, etc. — and how this will help you complete your studies…"></textarea>
+          <p class="form-hint">Minimum 50 characters.</p>
+        </div>
+      </div>
+
+      <div class="d-flex gap-8">
+        <button type="submit" class="btn btn-primary">Submit Application</button>
+        <a href="{{ url_for('student.scholarships') }}" class="btn btn-secondary">Cancel</a>
+      </div>
+    </form>
   </div>
 
 </div>

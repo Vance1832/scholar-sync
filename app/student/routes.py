@@ -156,8 +156,13 @@ def apply(scholarship_id):
     profile = current_user.student_profile
 
     if request.method == "POST":
-        message = request.form.get("application_message", "")
-        ok, msg = submit_application(profile, sch, message)
+        ok, msg = submit_application(
+            student=profile,
+            scholarship=sch,
+            personal_statement=request.form.get("personal_statement", ""),
+            financial_need=request.form.get("financial_need", ""),
+            intended_use=request.form.get("intended_use", ""),
+        )
         if ok:
             flash(msg, "success")
             return redirect(url_for("student.applications"))

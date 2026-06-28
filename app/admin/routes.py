@@ -187,9 +187,9 @@ def application_detail(app_id):
 def approve_application(app_id):
     from ..services.application import approve_application as svc_approve
     application = Application.query.get_or_404(app_id)
-    ok, msg = svc_approve(application)
+    ok, msg = svc_approve(application, reviewer_notes=request.form.get("reviewer_notes", ""))
     flash(msg, "success" if ok else "danger")
-    return redirect(url_for("admin.applications"))
+    return redirect(url_for("admin.application_detail", app_id=app_id))
 
 
 @admin.route("/applications/<int:app_id>/reject", methods=["POST"])
@@ -198,9 +198,9 @@ def approve_application(app_id):
 def reject_application(app_id):
     from ..services.application import reject_application as svc_reject
     application = Application.query.get_or_404(app_id)
-    ok, msg = svc_reject(application)
+    ok, msg = svc_reject(application, reason=request.form.get("rejection_reason", ""))
     flash(msg, "success" if ok else "danger")
-    return redirect(url_for("admin.applications"))
+    return redirect(url_for("admin.application_detail", app_id=app_id))
 
 
 @admin.route("/users/<int:user_id>/delete", methods=["POST"])

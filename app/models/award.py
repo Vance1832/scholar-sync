@@ -11,9 +11,11 @@ class Award(db.Model):
     award_date = db.Column(db.Date, default=db.func.current_date())
     payment_status = db.Column(db.String(16), default="pending")  # pending | processing | completed | failed | cancelled
     payment_method = db.Column(db.String(64))
-    payment_reference = db.Column(db.String(128))
+    payment_reference = db.Column(db.String(256))    # Required to mark as paid
+    recipient_account = db.Column(db.String(512))    # Bank/account details for transfer
     disbursement_date = db.Column(db.Date)
     notes = db.Column(db.Text)
+    disbursement_proof = db.Column(db.Text)          # Confirmation text / receipt note
 
     application = db.relationship("Application", back_populates="award")
 

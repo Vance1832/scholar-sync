@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}Award — {{ award.student.full_name }}{% endblock %}
+{% block page_title %}Award Disbursement{% endblock %}
+{% block page_subtitle %}<p class="page-subtitle">{{ award.scholarship.title }} · {{ award.student.full_name }}</p>{% endblock %}
+{% block page_actions %}
+  <a href="{{ url_for('donor.awards') }}" class="btn btn-secondary">← All Awards</a>
+{% endblock %}
+
+{% block sidebar %}{% include "shared/sidebar_donor.html" %}{% endblock %}
+
+{% block content %}
+
+{# ── Progress tracker ── #}
+<div style="display:flex; align-items:center; gap:0; margin-bottom:28px;">
+  {% set step = 1 if award.payment_status == 'pending' else (2 if award.payment_status == 'processing' else 3) %}
+
+  <div style="display:flex; align-items:center; gap:8px; flex:1;">
+    <div style="width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:700;
+      background:{% if step >= 1 %}var(--color-primary){% else %}var(--color-border){% endif %};
+      color:{% if step >= 1 %}#fff{% else %}var(--color-text-muted){% endif %};">1</div>
+    <span style="font-size:0.8125rem; font-weight:{% if step == 1 %}600{% else %}400{% endif %}; color:{% if step >= 1 %}var(--color-text){% else %}var(--color-text-muted){% endif %};">Approved</span>
+  </div>
+  <div style="flex:1; height:2px; background:{% if step >= 2 %}var(--color-primary){% else %}var(--color-border){% endif %}; margin:0 8px;"></div>
+  <div style="display:flex; align-items:center; gap:8px; flex:1;">
+    <div style="width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:700;
+      background:{% if step >= 2 %}var(--color-primary){% else %}var(--color-border){% endif %};
+      color:{% if step >= 2 %}#fff{% else %}var(--color-text-muted){% endif %};">2</div>
+    <span style="font-size:0.8125rem; font-weight:{% if step == 2 %}600{% else %}400{% endif %}; color:{% if step >= 2 %}var(--color-text){% else %}var(--color-text-muted){% endif %};">Initiate Transfer</span>
+  </div>
+  <div style="flex:1; height:2px; background:{% if step >= 3 %}var(--color-primary){% else %}var(--color-border){% endif %}; margin:0 8px;"></div>
+  <div style="display:flex; align-items:center; gap:8px; flex:1;">
+    <div style="width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:700;
+      background:{% if step >= 3 %}var(--color-success){% else %}var(--color-border){% endif %};
+      color:{% if step >= 3 %}#fff{% else %}var(--color-text-muted){% endif %};">3</div>
+    <span style="font-size:0.8125rem; font-weight:{% if step == 3 %}600{% else %}400{% endif %}; color:{% if step >= 3 %}var(--color-text){% else %}var(--color-text-muted){% endif %};">Confirmed</span>
+  </div>
+</div>
+
+<div class="two-col" style="align-items:start;">
+
+  {# ── Left: summary ── #}
+  <div>
+    <div class="form-section" style="margin-bottom:20px;">
+      <div class="form-section-title">Award Summary</div>
+      <div class="detail-block">
+        <div class="detail-label">Recipient</div>
+        <div class="detail-value fw-600">{{ award.student.full_name }}</div>
+      </div>
+      <div class="detail-block">
+        <div class="detail-label">Email</div>
+        <div class="detail-value">{{ award.student.email or '—' }}</div>
+      </div>
+      <div class="detail-block">
+        <div class="detail-label">Scholarship</div>
+        <div class="detail-value">{{ award.scholarship.title }}</div>
+      </div>
+      <div class="detail-block">
+        <div class="detail-label">Award Amount</div>
+        <div class="detail-value fw-600" style="font-size:1.25rem; color:var(--color-success);">{{ format_currency(award.amount) }}</div>
+      </div>
+      <div class="detail-block">
+        <div class="detail-label">Award Date</div>
+        <div class="detail-value td-muted">{{ format_date(award.award_date) }}</div>
+      </div>
+      <div class="detail-block">
+        <div class="detail-label">Status</div>
+        <div class="detail-value">
+          <span class="badge badge-{{ award.payment_status }}">{{ award.payment_status.replace('_',' ').title() }}</span>
+        </div>
+      </div>
+    </div>
+
+    {% if award.payment_status != 'pending' %}
+    <div class="form-section">
+      <div class="form-section-title">Transfer Details</div>
+      <div class="detail-block">
+        <div class="detail-label">Payment Method</div>
+        <div class="detail-value">{{ award.payment_method or '—' }}</div>
+      </div>
+      <div class="detail-block">
+        <div class="detail-label">Recipient Account</div>
+        <div class="detail-value text-sm" style="white-space:pre-wrap;">{{ award.recipient_account or '—' }}</div>
+      </div>
+      {% if award.payment_reference %}
+      <div class="detail-block">
+        <div class="detail-label">Transaction Reference</div>
+        <div class="detail-value fw-600">{{ award.payment_reference }}</div>
+      </div>
+      {% endif %}
+      {% if award.disbursement_date %}
+      <div class="detail-block">
+        <div class="detail-label">Disbursement Date</div>
+        <div class="detail-value td-muted">{{ format_date(award.disbursement_date) }}</div>
+      </div>
+      {% endif %}
+      {% if award.disbursement_proof %}
+      <div class="detail-block">
+        <div class="detail-label">Confirmation Note</div>
+        <div class="detail-value text-sm" style="white-space:pre-wrap;">{{ award.disbursement_proof }}</div>
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+
+  {# ── Right: action panel ── #}
+  <div>
+
+    {% if award.payment_status == 'pending' %}
+    {# ── Step 2: Initiate disbursement ── #}
+    <div class="form-section">
+      <div class="form-section-title">Step 2 — Initiate Transfer</div>
+      <p style="margin:0 0 16px; font-size:0.8125rem; color:var(--color-text-muted);">
+        Enter the recipient's bank or account details and select how the funds will be sent.
+        This moves the award to <strong>Processing</strong> status.
+      </p>
+      <form method="POST" action="{{ url_for('donor.award_initiate', award_id=award.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="form-group">
+          <label for="payment_method">Payment Method <span style="color:var(--color-danger);">*</span></label>
+          <select id="payment_method" name="payment_method" required>
+            <option value="">Select method…</option>
+            {% for m in payment_methods %}
+            <option value="{{ m }}">{{ m }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="recipient_account">Recipient Account / Bank Details <span style="color:var(--color-danger);">*</span></label>
+          <textarea id="recipient_account" name="recipient_account" rows="4" required
+            placeholder="Bank name, account number, account holder name, routing/SWIFT code, or any other transfer details needed…"></textarea>
+          <p class="form-hint">This will be used as the destination for the transfer. Double-check before proceeding.</p>
+        </div>
+        <div class="form-group">
+          <label for="notes">Internal Notes <span class="label-optional">(optional)</span></label>
+          <textarea id="notes" name="notes" rows="2" placeholder="Any internal notes about this disbursement…"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary"
+          data-confirm="Initiate disbursement of {{ format_currency(award.amount) }} to {{ award.student.full_name }}? Make sure the recipient details are correct.">
+          Initiate Transfer →
+        </button>
+      </form>
+    </div>
+
+    {% elif award.payment_status == 'processing' %}
+    {# ── Step 3: Confirm payment ── #}
+    <div class="form-section">
+      <div class="form-section-title">Step 3 — Confirm Payment</div>
+      <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:var(--radius); padding:12px 14px; margin-bottom:20px; font-size:0.8125rem; color:#92400e;">
+        <strong>Transfer is in progress.</strong> Once you have completed the actual bank transfer or payment,
+        enter the transaction reference and a confirmation note below to close this award.
+      </div>
+      <form method="POST" action="{{ url_for('donor.award_confirm', award_id=award.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="form-group">
+          <label for="payment_reference">Transaction / Reference Number <span style="color:var(--color-danger);">*</span></label>
+          <input type="text" id="payment_reference" name="payment_reference" required
+            placeholder="e.g. TXN-2024-00123, wire ref #, cheque number…">
+          <p class="form-hint">The reference number from your bank or payment provider. This is the proof of transfer.</p>
+        </div>
+        <div class="form-group">
+          <label for="disbursement_proof">Confirmation Note <span style="color:var(--color-danger);">*</span></label>
+          <textarea id="disbursement_proof" name="disbursement_proof" rows="4" required
+            placeholder="Describe the transfer confirmation — e.g. 'Wire transfer completed via [Bank] on [date]. Recipient confirmed receipt by email on [date]. Screenshot saved in records.'"></textarea>
+          <p class="form-hint">Describe how you confirmed the money was sent and received. This is the audit record.</p>
+        </div>
+        <button type="submit" class="btn btn-success"
+          data-confirm="Confirm this payment as completed? This action cannot be undone.">
+          ✓ Confirm Payment Complete
+        </button>
+      </form>
+    </div>
+
+    {% elif award.payment_status == 'completed' %}
+    <div class="form-section">
+      <div class="form-section-title">Disbursement Complete</div>
+      <div style="text-align:center; padding:24px 0;">
+        <div style="width:52px; height:52px; background:var(--color-success-light); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 12px; font-size:1.5rem;">✓</div>
+        <div style="font-weight:600; color:var(--color-success); margin-bottom:4px;">Payment Confirmed</div>
+        <p style="font-size:0.8125rem; color:var(--color-text-muted); margin:0;">
+          {{ format_currency(award.amount) }} disbursed to {{ award.student.full_name }}<br>
+          {% if award.disbursement_date %}on {{ format_date(award.disbursement_date) }}{% endif %}
+        </p>
+      </div>
+    </div>
+
+    {% else %}
+    <div class="form-section">
+      <div class="form-section-title">Award Status</div>
+      <span class="badge badge-{{ award.payment_status }}">{{ award.payment_status.title() }}</span>
+    </div>
+    {% endif %}
+
+  </div>
+
+</div>
+{% endblock %}

@@ -9,7 +9,7 @@ from ..services.scholarship import (
     get_donor_scholarships, create_scholarship, update_scholarship
 )
 from ..services.application import approve_application, reject_application
-from ..services.award import mark_paid, get_donor_awards
+from ..services.award import initiate_disbursement, confirm_payment, get_donor_awards
 from ..utils.helpers import MAJORS, DONOR_TYPES, PAYMENT_METHODS, format_currency, format_date
 
 
@@ -210,9 +210,12 @@ def approve(app_id):
     application = Application.query.get_or_404(app_id)
     if application.scholarship.donor_id != current_user.donor_profile.id:
         abort(403)
-    ok, msg = approve_application(application)
+    ok, msg = approve_application(
+        application,
+        reviewer_notes=request.form.get("reviewer_notes", ""),
+    )
     flash(msg, "success" if ok else "danger")
-    return redirect(url_for("donor.applicants"))
+    return redirect(url_for("donor.applicant_detail", app_id=app_id))
 
 
 @donor.route("/applicants/<int:app_id>/reject", methods=["POST"])
@@ -222,9 +225,12 @@ def reject(app_id):
     application = Application.query.get_or_404(app_id)
     if application.scholarship.donor_id != current_user.donor_profile.id:
         abort(403)
-    ok, msg = reject_application(application)
+    ok, msg = reject_application(
+        application,
+        reason=request.form.get("rejection_reason", ""),
+    )
     flash(msg, "success" if ok else "danger")
-    return redirect(url_for("donor.applicants"))
+    return redirect(url_for("donor.applicant_detail", app_id=app_id))
 
 
 @donor.route("/awards")
@@ -248,21 +254,53 @@ def awards():
     )
 
 
-@donor.route("/awards/<int:award_id>/pay", methods=["POST"])
+@donor.route("/awards/<int:award_id>/initiate", methods=["POST"])
 @login_required
 @donor_required
-def award_pay(award_id):
+def award_initiate(award_id):
     award = Award.query.get_or_404(award_id)
     if award.scholarship.donor_id != current_user.donor_profile.id:
         abort(403)
-
-    ok, msg = mark_paid(
+    ok, msg = initiate_disbursement(
         award=award,
         payment_method=request.form.get("payment_method", ""),
-        payment_reference=request.form.get("payment_reference", ""),
+        recipient_account=request.form.get("recipient_account", ""),
+        notes=request.form.get("notes", ""),
     )
     flash(msg, "success" if ok else "danger")
-    return redirect(url_for("donor.awards"))
+    return redirect(url_for("donor.award_detail", award_id=award_id))
+
+
+@donor.route("/awards/<int:award_id>/confirm", methods=["POST"])
+@login_required
+@donor_required
+def award_confirm(award_id):
+    award = Award.query.get_or_404(award_id)
+    if award.scholarship.donor_id != current_user.donor_profile.id:
+        abort(403)
+    ok, msg = confirm_payment(
+        award=award,
+        payment_reference=request.form.get("payment_reference", ""),
+        disbursement_proof=request.form.get("disbursement_proof", ""),
+    )
+    flash(msg, "success" if ok else "danger")
+    return redirect(url_for("donor.award_detail", award_id=award_id))
+
+
+@donor.route("/awards/<int:award_id>")
+@login_required
+@donor_required
+def award_detail(award_id):
+    award = Award.query.get_or_404(award_id)
+    if award.scholarship.donor_id != current_user.donor_profile.id:
+        abort(403)
+    return render_template(
+        "donor/award_detail.html",
+        award=award,
+        payment_methods=PAYMENT_METHODS,
+        format_currency=format_currency,
+        format_date=format_date,
+    )
 
 
 @donor.route("/settings", methods=["GET", "POST"])
