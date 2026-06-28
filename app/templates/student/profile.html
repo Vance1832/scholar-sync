@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile{% endblock %}
+{% block page_title %}My Profile{% endblock %}
+{% block page_subtitle %}<p class="page-subtitle">{{ profile.student_code }}</p>{% endblock %}
+
+{% block sidebar %}{% include "shared/sidebar_student.html" %}{% endblock %}
+
+{% block content %}
+<form method="POST" action="{{ url_for('student.profile') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  <div class="two-col" style="align-items:start;">
+
+    <div>
+      <div class="form-section" style="margin-bottom:20px;">
+        <div class="form-section-title">Personal Information</div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="first_name">First Name</label>
+            <input type="text" id="first_name" name="first_name" value="{{ profile.first_name or '' }}">
+          </div>
+          <div class="form-group">
+            <label for="last_name">Last Name</label>
+            <input type="text" id="last_name" name="last_name" value="{{ profile.last_name or '' }}">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" name="email" value="{{ profile.email or '' }}">
+        </div>
+
+        <div class="form-group">
+          <label for="phone">Phone Number <span class="label-optional">optional</span></label>
+          <input type="text" id="phone" name="phone" value="{{ profile.phone or '' }}">
+        </div>
+
+        <div class="form-group">
+          <label for="address">Address <span class="label-optional">optional</span></label>
+          <input type="text" id="address" name="address" value="{{ profile.address or '' }}">
+        </div>
+
+        <div class="form-group">
+          <label for="date_of_birth">Date of Birth <span class="label-optional">optional</span></label>
+          <input type="date" id="date_of_birth" name="date_of_birth"
+            value="{{ profile.date_of_birth.strftime('%Y-%m-%d') if profile.date_of_birth else '' }}">
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="form-section" style="margin-bottom:20px;">
+        <div class="form-section-title">Academic Information</div>
+
+        <div class="form-group">
+          <label for="major">Major / Program</label>
+          <select id="major" name="major">
+            <option value="">— Select major —</option>
+            {% for m in majors %}
+            <option value="{{ m }}" {{ 'selected' if profile.major == m }}>{{ m }}</option>
+            {% endfor %}
+          </select>
+          <p class="form-hint">Used to match you with relevant scholarships.</p>
+        </div>
+
+        <div class="form-group">
+          <label for="gpa">GPA <span class="label-optional">0.0 – 4.0</span></label>
+          <input type="text" id="gpa" name="gpa" value="{{ profile.gpa or '' }}" placeholder="e.g. 3.75">
+        </div>
+
+        <div class="form-group">
+          <label for="academic_year">Academic Year <span class="label-optional">optional</span></label>
+          <select id="academic_year" name="academic_year">
+            <option value="">— Select year —</option>
+            {% for y in academic_years %}
+            <option value="{{ y }}" {{ 'selected' if profile.academic_year == y }}>{{ y }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="department">Department <span class="label-optional">optional</span></label>
+          <input type="text" id="department" name="department" value="{{ profile.department or '' }}">
+        </div>
+      </div>
+
+      <div class="d-flex gap-8">
+        <button type="submit" class="btn btn-primary">Save Profile</button>
+        <a href="{{ url_for('student.dashboard') }}" class="btn btn-secondary">Cancel</a>
+      </div>
+    </div>
+
+  </div>
+</form>
+{% endblock %}

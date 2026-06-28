@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Scholarships{% endblock %}
+{% block page_title %}Scholarships{% endblock %}
+{% block page_subtitle %}<p class="page-subtitle">{{ scholarships|length }} total</p>{% endblock %}
+
+{% block sidebar %}{% include "shared/sidebar_admin.html" %}{% endblock %}
+
+{% block content %}
+<div class="section-header">
+  <div></div>
+  <form method="GET" class="search-bar">
+    <input type="text" name="q" value="{{ q }}" placeholder="Search by title…">
+    <button type="submit" class="btn btn-secondary">Search</button>
+    {% if q %}<a href="{{ url_for('admin.scholarships') }}" class="btn btn-secondary">Clear</a>{% endif %}
+  </form>
+</div>
+
+{% if scholarships %}
+<div class="table-wrapper">
+  <table>
+    <thead>
+      <tr>
+        <th>Title</th>
+        <th>Donor</th>
+        <th>Amount</th>
+        <th>Deadline</th>
+        <th>Status</th>
+        <th>Applications</th>
+        <th>Pending</th>
+        <th>Created</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for sch in scholarships %}
+      <tr>
+        <td class="fw-600">{{ sch.title }}</td>
+        <td class="td-muted">{{ sch.donor.display_name }}</td>
+        <td>{{ format_currency(sch.amount) }}</td>
+        <td class="td-muted">{{ format_date(sch.deadline) if sch.deadline else 'Open' }}</td>
+        <td>
+          <span class="badge {{ 'badge-active' if sch.is_active else 'badge-inactive' }}">
+            {{ 'Active' if sch.is_active else 'Inactive' }}
+          </span>
+        </td>
+        <td class="td-muted">{{ sch.application_count }}</td>
+        <td class="td-muted">{{ sch.pending_count }}</td>
+        <td class="td-muted">{{ format_date(sch.created_at, '%b %d, %Y') }}</td>
+        <td>
+          <form method="POST" action="{{ url_for('admin.toggle_scholarship', scholarship_id=sch.id) }}" style="display:inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-secondary btn-sm"
+              data-confirm="{{ 'Deactivate' if sch.is_active else 'Activate' }} this scholarship?">
+              {{ 'Deactivate' if sch.is_active else 'Activate' }}
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="empty-state card" style="padding:48px;">
+  <div class="empty-title">No scholarships found</div>
+  <div class="empty-desc">{% if q %}No scholarships match "{{ q }}".{% else %}No scholarships have been created yet.{% endif %}</div>
+</div>
+{% endif %}
+{% endblock %}

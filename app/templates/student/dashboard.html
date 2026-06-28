@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_subtitle %}<p class="page-subtitle">Welcome back, {{ profile.full_name }}</p>{% endblock %}
+
+{% block page_actions %}
+  <a href="{{ url_for('student.scholarships') }}" class="btn btn-primary">Browse Scholarships</a>
+{% endblock %}
+
+{% block sidebar %}{% include "shared/sidebar_student.html" %}{% endblock %}
+
+{% block content %}
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="stat-label">Total Applications</div>
+    <div class="stat-value">{{ stats.total }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Pending Review</div>
+    <div class="stat-value" style="color:var(--color-warning);">{{ stats.pending }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Approved</div>
+    <div class="stat-value" style="color:var(--color-success);">{{ stats.approved }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Rejected</div>
+    <div class="stat-value" style="color:var(--color-danger);">{{ stats.rejected }}</div>
+  </div>
+</div>
+
+{% if not profile.profile_completed %}
+<div class="flash flash-warning" style="margin-bottom:20px; position:static; max-width:100%;">
+  <span>Your profile is incomplete. <a href="{{ url_for('student.profile') }}">Complete your profile</a> to see eligibility status for scholarships.</span>
+</div>
+{% endif %}
+
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title">Recent Applications</h2>
+    <a href="{{ url_for('student.applications') }}" class="btn btn-secondary btn-sm">View all</a>
+  </div>
+  {% if recent_applications %}
+  <div class="table-wrapper" style="border:none; border-radius:0; box-shadow:none;">
+    <table>
+      <thead>
+        <tr>
+          <th>Scholarship</th>
+          <th>Amount</th>
+          <th>Status</th>
+          <th>Applied</th>
+          <th>Donor</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for app in recent_applications %}
+        <tr>
+          <td class="fw-600">{{ app.scholarship.title }}</td>
+          <td>{{ format_currency(app.scholarship.amount) }}</td>
+          <td><span class="badge badge-{{ app.status }}">{{ app.status_label }}</span></td>
+          <td class="td-muted">{{ format_date(app.date_applied, '%b %d, %Y') }}</td>
+          <td class="td-muted">{{ app.scholarship.donor.display_name }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-title">No applications yet</div>
+    <div class="empty-desc">Browse available scholarships and submit your first application.</div>
+    <a href="{{ url_for('student.scholarships') }}" class="btn btn-primary" style="margin-top:16px;">Browse Scholarships</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

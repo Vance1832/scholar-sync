@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}My Scholarships{% endblock %}
+{% block page_title %}My Scholarships{% endblock %}
+{% block page_subtitle %}<p class="page-subtitle">{{ scholarships|length }} scholarship{{ 's' if scholarships|length != 1 }}</p>{% endblock %}
+{% block page_actions %}
+  <a href="{{ url_for('donor.scholarship_new') }}" class="btn btn-primary">+ New Scholarship</a>
+{% endblock %}
+
+{% block sidebar %}{% include "shared/sidebar_donor.html" %}{% endblock %}
+
+{% block content %}
+{% if scholarships %}
+<div class="table-wrapper">
+  <table>
+    <thead>
+      <tr>
+        <th>Title</th>
+        <th>Amount</th>
+        <th>Deadline</th>
+        <th>Status</th>
+        <th>Applications</th>
+        <th>Pending</th>
+        <th>Created</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for sch in scholarships %}
+      <tr>
+        <td class="fw-600">{{ sch.title }}</td>
+        <td>{{ format_currency(sch.amount) }}</td>
+        <td class="td-muted">{{ format_date(sch.deadline) if sch.deadline else 'Open' }}</td>
+        <td><span class="badge {{ 'badge-active' if sch.is_active else 'badge-inactive' }}">{{ 'Active' if sch.is_active else 'Inactive' }}</span></td>
+        <td class="td-muted">{{ sch.application_count }}</td>
+        <td class="td-muted">{{ sch.pending_count }}</td>
+        <td class="td-muted">{{ format_date(sch.created_at, '%b %d, %Y') }}</td>
+        <td>
+          <div class="d-flex gap-8">
+            <a href="{{ url_for('donor.scholarship_edit', scholarship_id=sch.id) }}" class="btn btn-secondary btn-sm">Edit</a>
+            <a href="{{ url_for('donor.applicants', scholarship_id=sch.id) }}" class="btn btn-secondary btn-sm">Applicants</a>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="empty-state card" style="padding:48px;">
+  <div class="empty-title">No scholarships yet</div>
+  <div class="empty-desc">Create your first scholarship to start receiving applications from students.</div>
+  <a href="{{ url_for('donor.scholarship_new') }}" class="btn btn-primary" style="margin-top:16px;">Create Scholarship</a>
+</div>
+{% endif %}
+{% endblock %}

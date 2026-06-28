@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Awards & Payments{% endblock %}
+{% block page_title %}Awards & Payments{% endblock %}
+{% block page_subtitle %}<p class="page-subtitle">{{ awards|length }} award{{ 's' if awards|length != 1 }}</p>{% endblock %}
+
+{% block sidebar %}{% include "shared/sidebar_donor.html" %}{% endblock %}
+
+{% block content %}
+<div class="stat-grid" style="margin-bottom:24px;">
+  <div class="stat-card">
+    <div class="stat-label">Total Awards</div>
+    <div class="stat-value">{{ awards|length }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Total Committed</div>
+    <div class="stat-value">{{ format_currency(total_amount) }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Total Disbursed</div>
+    <div class="stat-value" style="color:var(--color-success);">{{ format_currency(paid_amount) }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Pending Payment</div>
+    <div class="stat-value" style="color:var(--color-warning);">{{ format_currency(total_amount - paid_amount) }}</div>
+  </div>
+</div>
+
+{% if awards %}
+<div class="table-wrapper">
+  <table>
+    <thead>
+      <tr>
+        <th>Student</th>
+        <th>Scholarship</th>
+        <th>Amount</th>
+        <th>Award Date</th>
+        <th>Payment Status</th>
+        <th>Disbursed</th>
+        <th>Method</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for award in awards %}
+      <tr>
+        <td>
+          <div class="fw-600">{{ award.student.full_name }}</div>
+          <div class="text-sm td-muted">{{ award.student.email or '' }}</div>
+        </td>
+        <td class="td-muted">{{ award.scholarship.title }}</td>
+        <td class="fw-600">{{ format_currency(award.amount) }}</td>
+        <td class="td-muted">{{ format_date(award.award_date) }}</td>
+        <td>
+          <span class="badge badge-{{ award.payment_status }}">{{ award.payment_status.title() }}</span>
+        </td>
+        <td class="td-muted">{{ format_date(award.disbursement_date) if award.disbursement_date else '—' }}</td>
+        <td class="td-muted">{{ award.payment_method or '—' }}</td>
+        <td>
+          {% if award.payment_status != 'completed' %}
+          <button class="btn btn-success btn-sm" onclick="openPayModal({{ award.id }}, '{{ award.student.full_name }}', '{{ format_currency(award.amount) }}')">
+            Mark Paid
+          </button>
+          {% else %}
+            <span class="text-sm td-muted">Ref: {{ award.payment_reference or '—' }}</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="empty-state card" style="padding:48px;">
+  <div class="empty-title">No awards yet</div>
+  <div class="empty-desc">Awards are created automatically when you approve a student application.</div>
+  <a href="{{ url_for('donor.applicants') }}" class="btn btn-primary" style="margin-top:16px;">Review Applications</a>
+</div>
+{% endif %}
+
+{# ── Payment modal ── #}
+<div id="pay-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:500; align-items:center; justify-content:center;">
+  <div style="background:#fff; border-radius:10px; padding:28px; width:440px; box-shadow:0 8px 32px rgba(0,0,0,0.18);">
+    <h3 style="margin:0 0 4px; font-size:1rem;">Record Payment</h3>
+    <p id="pay-modal-desc" class="text-sm td-muted" style="margin:0 0 20px;"></p>
+
+    <form method="POST" id="pay-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="form-group">
+        <label>Payment Method</label>
+        <select name="payment_method">
+          {% for m in payment_methods %}
+          <option>{{ m }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Reference Number</label>
+        <input type="text" name="payment_reference" placeholder="e.g. TXN-2025-001" required>
+        <p class="form-hint">Bank transfer ID, check number, or transaction reference.</p>
+      </div>
+      <div class="d-flex gap-8">
+        <button type="submit" class="btn btn-success">Confirm Payment</button>
+        <button type="button" class="btn btn-secondary" onclick="closePayModal()">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function openPayModal(awardId, studentName, amount) {
+  document.getElementById('pay-modal-desc').textContent =
+    studentName + ' — ' + amount;
+  document.getElementById('pay-form').action =
+    '/donor/awards/' + awardId + '/pay';
+  var modal = document.getElementById('pay-modal');
+  modal.style.display = 'flex';
+}
+function closePayModal() {
+  document.getElementById('pay-modal').style.display = 'none';
+}
+document.getElementById('pay-modal').addEventListener('click', function(e) {
+  if (e.target === this) closePayModal();
+});
+</script>
+{% endblock %}

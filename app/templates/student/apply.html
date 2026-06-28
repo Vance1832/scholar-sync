@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Apply — {{ scholarship.title }}{% endblock %}
+{% block page_title %}Apply for Scholarship{% endblock %}
+{% block page_actions %}
+  <a href="{{ url_for('student.scholarship_detail', scholarship_id=scholarship.id) }}" class="btn btn-secondary">← Back</a>
+{% endblock %}
+
+{% block sidebar %}{% include "shared/sidebar_student.html" %}{% endblock %}
+
+{% block content %}
+<div class="two-col" style="align-items:start;">
+
+  <div>
+    <div class="form-section" style="margin-bottom:20px;">
+      <div class="form-section-title">Scholarship Summary</div>
+      <div class="detail-block">
+        <div class="detail-label">Title</div>
+        <div class="detail-value fw-600">{{ scholarship.title }}</div>
+      </div>
+      <div class="detail-block">
+        <div class="detail-label">Amount</div>
+        <div class="detail-value fw-600" style="color:var(--color-success);">{{ format_currency(scholarship.amount) }}</div>
+      </div>
+      <div class="detail-block">
+        <div class="detail-label">Donor</div>
+        <div class="detail-value">{{ scholarship.donor.display_name }}</div>
+      </div>
+      <div class="detail-block">
+        <div class="detail-label">Deadline</div>
+        <div class="detail-value">{{ format_date(scholarship.deadline) if scholarship.deadline else 'No deadline' }}</div>
+      </div>
+    </div>
+
+    {% if eligibility.eligible == false %}
+    <div class="flash flash-warning" style="position:static; max-width:100%; margin-bottom:20px;">
+      <div>
+        <strong>You may not meet all requirements:</strong>
+        <ul style="margin:8px 0 0; padding-left:18px;">
+          {% for reason in eligibility.reasons %}
+          <li style="font-size:0.8125rem;">{{ reason }}</li>
+          {% endfor %}
+        </ul>
+        <p style="margin:8px 0 0; font-size:0.8rem;">You can still apply — the donor will review all applications.</p>
+      </div>
+    </div>
+    {% elif eligibility.eligible == true %}
+    <div class="flash flash-success" style="position:static; max-width:100%; margin-bottom:20px;">
+      <span>✓ You meet all eligibility requirements for this scholarship.</span>
+    </div>
+    {% endif %}
+  </div>
+
+  <div>
+    <div class="form-section">
+      <div class="form-section-title">Your Application Statement</div>
+      <form method="POST" action="{{ url_for('student.apply', scholarship_id=scholarship.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="form-group">
+          <label for="application_message">
+            Personal Statement
+            <span class="label-optional">(minimum 50 characters)</span>
+          </label>
+          <textarea id="application_message" name="application_message" rows="12"
+            placeholder="Tell the donor about yourself, your goals, your achievements, and why you deserve this scholarship…" required minlength="50"></textarea>
+          <p class="form-hint">Include your academic goals, financial need, achievements, and how this scholarship will help you.</p>
+        </div>
+
+        <div style="display:flex; gap:10px;">
+          <button type="submit" class="btn btn-primary">Submit Application</button>
+          <a href="{{ url_for('student.scholarships') }}" class="btn btn-secondary">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

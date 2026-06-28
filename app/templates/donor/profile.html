@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile{% endblock %}
+{% block page_title %}My Profile{% endblock %}
+{% block page_subtitle %}<p class="page-subtitle">{{ profile.donor_code }}</p>{% endblock %}
+
+{% block sidebar %}{% include "shared/sidebar_donor.html" %}{% endblock %}
+
+{% block content %}
+<form method="POST" action="{{ url_for('donor.profile') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  <div style="max-width:600px;">
+    <div class="form-section" style="margin-bottom:20px;">
+      <div class="form-section-title">Donor Information</div>
+
+      <div class="form-group">
+        <label for="name">Name / Organization</label>
+        <input type="text" id="name" name="name" value="{{ profile.name or '' }}"
+               placeholder="Your name or organization name">
+      </div>
+
+      <div class="form-group">
+        <label for="donor_type">Donor Type</label>
+        <select id="donor_type" name="donor_type">
+          <option value="">— Select type —</option>
+          {% for t in donor_types %}
+          <option value="{{ t }}" {{ 'selected' if profile.donor_type == t }}>{{ t }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="contact_email">Contact Email</label>
+        <input type="email" id="contact_email" name="contact_email"
+               value="{{ profile.contact_email or '' }}">
+      </div>
+
+      <div class="form-group">
+        <label for="contact_phone">Contact Phone <span class="label-optional">optional</span></label>
+        <input type="text" id="contact_phone" name="contact_phone"
+               value="{{ profile.contact_phone or '' }}">
+      </div>
+
+      <div class="form-group">
+        <label for="address">Address <span class="label-optional">optional</span></label>
+        <input type="text" id="address" name="address"
+               value="{{ profile.address or '' }}">
+      </div>
+    </div>
+
+    <div class="d-flex gap-8">
+      <button type="submit" class="btn btn-primary">Save Profile</button>
+      <a href="{{ url_for('donor.dashboard') }}" class="btn btn-secondary">Cancel</a>
+    </div>
+  </div>
+</form>
+{% endblock %}

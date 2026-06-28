@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Application #{{ application.id }}{% endblock %}
+{% block page_title %}Application Review{% endblock %}
+{% block page_actions %}
+  <a href="{{ url_for('admin.applications') }}" class="btn btn-secondary">← Back</a>
+{% endblock %}
+
+{% block sidebar %}{% include "shared/sidebar_admin.html" %}{% endblock %}
+
+{% block content %}
+<div class="two-col" style="align-items:start;">
+
+  <div>
+    <div class="form-section" style="margin-bottom:20px;">
+      <div class="form-section-title">Student</div>
+      <div class="detail-block">
+        <div class="detail-label">Name</div>
+        <div class="detail-value fw-600">{{ application.student.full_name }}</div>
+      </div>
+      <div class="detail-block">
+        <div class="detail-label">Email</div>
+        <div class="detail-value">{{ application.student.email or '—' }}</div>
+      </div>
+      <div class="form-row">
+        <div class="detail-block">
+          <div class="detail-label">Major</div>
+          <div class="detail-value">{{ application.student.major or '—' }}</div>
+        </div>
+        <div class="detail-block">
+          <div class="detail-label">GPA</div>
+          <div class="detail-value">{{ '%.2f'|format(application.student.gpa_float) if application.student.gpa else '—' }}</div>
+        </div>
+      </div>
+      <div class="detail-block">
+        <div class="detail-label">Eligibility</div>
+        <div class="detail-value">
+          {% if eligible %}
+            <span class="elig-badge elig-met">✓ Meets all requirements</span>
+          {% else %}
+            <span class="elig-badge elig-unmet">⚠ Does not meet all requirements</span>
+            {% if reasons %}
+            <ul style="margin:8px 0 0; padding-left:18px; color:var(--color-text-muted); font-size:0.8rem;">
+              {% for r in reasons %}<li>{{ r }}</li>{% endfor %}
+            </ul>
+            {% endif %}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">Application Statement</div>
+      <p style="margin:0; line-height:1.8; color:var(--color-text); white-space:pre-wrap;">
+        {{ application.application_message or 'No statement provided.' }}
+      </p>
+    </div>
+  </div>
+
+  <div>
+    <div class="form-section" style="margin-bottom:20px;">
+      <div class="form-section-title">Scholarship</div>
+      <div class="detail-block">
+        <div class="detail-label">Title</div>
+        <div class="detail-value fw-600">{{ application.scholarship.title }}</div>
+      </div>
+      <div class="detail-block">
+        <div class="detail-label">Donor</div>
+        <div class="detail-value">{{ application.scholarship.donor.display_name }}</div>
+      </div>
+      <div class="detail-block">
+        <div class="detail-label">Amount</div>
+        <div class="detail-value fw-600" style="color:var(--color-success);">{{ format_currency(application.scholarship.amount) }}</div>
+      </div>
+      <div class="detail-block">
+        <div class="detail-label">Requirements</div>
+        <div class="detail-value td-muted text-sm">
+          {{ application.scholarship.criteria.as_display_string() if application.scholarship.criteria else 'Open to all' }}
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">Decision</div>
+      <div class="detail-block">
+        <div class="detail-label">Current Status</div>
+        <div class="detail-value">
+          <span class="badge badge-{{ application.status }}">{{ application.status_label }}</span>
+        </div>
+      </div>
+      <div class="detail-block">
+        <div class="detail-label">Applied</div>
+        <div class="detail-value td-muted">{{ format_date(application.date_applied) }}</div>
+      </div>
+      {% if application.date_reviewed %}
+      <div class="detail-block">
+        <div class="detail-label">Reviewed</div>
+        <div class="detail-value td-muted">{{ format_date(application.date_reviewed) }}</div>
+      </div>
+      {% endif %}
+
+      {% if application.status == 'pending' %}
+      <div class="d-flex gap-8" style="margin-top:16px;">
+        <form method="POST" action="{{ url_for('admin.approve_application', app_id=application.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-success"
+            data-confirm="Approve this application? Other pending applications for this scholarship will be rejected.">
+            Approve
+          </button>
+        </form>
+        <form method="POST" action="{{ url_for('admin.reject_application', app_id=application.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-danger"
+            data-confirm="Reject this application?">
+            Reject
+          </button>
+        </form>
+      </div>
+      {% endif %}
+
+      {% if application.award %}
+      <div style="margin-top:16px; padding-top:16px; border-top:1px solid var(--color-border);">
+        <div class="detail-label">Award Record</div>
+        <div style="margin-top:6px;">
+          <span class="badge badge-{{ application.award.payment_status }}">
+            {{ application.award.payment_status.title() }}
+          </span>
+          <span class="td-muted text-sm" style="margin-left:8px;">
+            {{ format_currency(application.award.amount) }}
+          </span>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}

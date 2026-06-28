@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}ScholarSync{% endblock %} — ScholarSync</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+<body>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="flash-container">
+    {% for category, message in messages %}
+    <div class="flash flash-{{ category }}">
+      <span>{{ message }}</span>
+      <button class="flash-close" aria-label="Dismiss">✕</button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}
+
+<div class="app-layout">
+
+  {# ── Sidebar ── #}
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-brand-name">ScholarSync</div>
+      <div class="sidebar-brand-sub">Scholarship Management</div>
+    </div>
+
+    {% block sidebar %}{% endblock %}
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-avatar">{{ current_user.username[0].upper() }}</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-username">{{ current_user.username }}</div>
+          <div class="sidebar-role">{{ current_user.role }}</div>
+        </div>
+      </div>
+      <a href="{{ url_for('auth.logout') }}" class="btn btn-secondary" style="width:100%; justify-content:center;">
+        Sign out
+      </a>
+    </div>
+  </aside>
+
+  {# ── Main content ── #}
+  <main class="main-content">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">{% block page_title %}{% endblock %}</h1>
+        {% block page_subtitle %}{% endblock %}
+      </div>
+      <div class="d-flex align-center gap-8">
+        {% block page_actions %}{% endblock %}
+      </div>
+    </div>
+
+    <div class="page-body">
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+
+</div>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In — ScholarSync</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+<body>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="flash-container">
+    {% for category, message in messages %}
+    <div class="flash flash-{{ category }}">
+      <span>{{ message }}</span>
+      <button class="flash-close">✕</button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}
+
+<div class="auth-layout">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <div class="auth-brand-name">ScholarSync</div>
+      <div class="auth-brand-sub">Scholarship Management System</div>
+    </div>
+
+    <h2 class="auth-title">Sign in to your account</h2>
+
+    <form method="POST" action="{{ url_for('auth.login') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="role" id="role-input" value="student">
+
+      <div style="margin-bottom: 20px;">
+        <label style="display:block; font-size:0.8125rem; font-weight:500; margin-bottom:6px;">Sign in as</label>
+        <div class="role-tabs">
+          <button type="button" class="role-tab active" data-role="student">Student</button>
+          <button type="button" class="role-tab" data-role="donor">Donor</button>
+          <button type="button" class="role-tab" data-role="admin">Admin</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" autocomplete="username" autofocus required>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" autocomplete="current-password" required>
+      </div>
+
+      <div class="form-group" style="display:flex; align-items:center; gap:8px;">
+        <input type="checkbox" name="remember" id="remember" style="width:auto;">
+        <label for="remember" style="margin:0; font-weight:400; color:var(--color-text-muted);">Remember me</label>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center; padding: 9px;">
+        Sign in
+      </button>
+    </form>
+
+    <p style="text-align:center; margin-top:20px; font-size:0.8125rem; color:var(--color-text-muted);">
+      Don't have an account?
+      <a href="{{ url_for('auth.register') }}">Create one</a>
+    </p>
+
+    <p style="text-align:center; margin-top:10px; font-size:0.75rem; color:var(--color-text-light);">
+      Admin default: <code>admin / admin123</code>
+    </p>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}My Applications{% endblock %}
+{% block page_title %}My Applications{% endblock %}
+{% block page_subtitle %}<p class="page-subtitle">{{ applications|length }} application{{ 's' if applications|length != 1 }}</p>{% endblock %}
+{% block page_actions %}
+  <a href="{{ url_for('student.scholarships') }}" class="btn btn-primary">Browse Scholarships</a>
+{% endblock %}
+
+{% block sidebar %}{% include "shared/sidebar_student.html" %}{% endblock %}
+
+{% block content %}
+<div class="section-header">
+  <div class="d-flex gap-8 flex-wrap">
+    {% for s in ['', 'pending', 'approved', 'rejected', 'withdrawn'] %}
+    <a href="{{ url_for('student.applications', status=s) }}"
+       class="btn {{ 'btn-primary' if status_filter == s else 'btn-secondary' }} btn-sm">
+      {{ 'All' if s == '' else s.title() }}
+    </a>
+    {% endfor %}
+  </div>
+</div>
+
+{% if applications %}
+<div class="table-wrapper">
+  <table>
+    <thead>
+      <tr>
+        <th>Scholarship</th>
+        <th>Amount</th>
+        <th>Donor</th>
+        <th>Status</th>
+        <th>Applied</th>
+        <th>Reviewed</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for app in applications %}
+      <tr>
+        <td>
+          <div class="fw-600">{{ app.scholarship.title }}</div>
+        </td>
+        <td>{{ format_currency(app.scholarship.amount) }}</td>
+        <td class="td-muted">{{ app.scholarship.donor.display_name }}</td>
+        <td>
+          <span class="badge badge-{{ app.status }}">{{ app.status_label }}</span>
+          {% if app.award and app.award.payment_status == 'completed' %}
+            <span class="badge badge-paid" style="margin-left:4px;">Paid</span>
+          {% endif %}
+        </td>
+        <td class="td-muted">{{ format_date(app.date_applied, '%b %d, %Y') }}</td>
+        <td class="td-muted">{{ format_date(app.date_reviewed, '%b %d, %Y') if app.date_reviewed else '—' }}</td>
+        <td>
+          {% if app.status == 'pending' %}
+          <form method="POST" action="{{ url_for('student.withdraw', app_id=app.id) }}" style="display:inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-secondary btn-sm"
+              data-confirm="Withdraw this application? This cannot be undone.">Withdraw</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="empty-state card" style="padding:48px;">
+  <div class="empty-title">No applications{% if status_filter %} with status "{{ status_filter }}"{% endif %}</div>
+  <div class="empty-desc">Browse available scholarships and submit your first application.</div>
+  <a href="{{ url_for('student.scholarships') }}" class="btn btn-primary" style="margin-top:16px;">Browse Scholarships</a>
+</div>
+{% endif %}
+{% endblock %}

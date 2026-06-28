@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% set is_edit = scholarship is not none %}
+{% block title %}{{ 'Edit Scholarship' if is_edit else 'New Scholarship' }}{% endblock %}
+{% block page_title %}{{ 'Edit Scholarship' if is_edit else 'Create Scholarship' }}{% endblock %}
+{% block page_actions %}
+  <a href="{{ url_for('donor.scholarships') }}" class="btn btn-secondary">← Back</a>
+{% endblock %}
+
+{% block sidebar %}{% include "shared/sidebar_donor.html" %}{% endblock %}
+
+{% block content %}
+<form method="POST">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  <div class="two-col" style="align-items:start;">
+
+    <div>
+      <div class="form-section" style="margin-bottom:20px;">
+        <div class="form-section-title">Basic Information</div>
+
+        <div class="form-group">
+          <label for="title">Scholarship Title</label>
+          <input type="text" id="title" name="title" required
+                 value="{{ scholarship.title if is_edit else '' }}"
+                 placeholder="e.g. STEM Excellence Award 2025">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="amount">Award Amount ($)</label>
+            <input type="text" id="amount" name="amount" required
+                   value="{{ scholarship.amount_float if is_edit else '' }}"
+                   placeholder="e.g. 5000">
+          </div>
+          <div class="form-group">
+            <label for="deadline">Application Deadline <span class="label-optional">optional</span></label>
+            <input type="date" id="deadline" name="deadline"
+                   value="{{ scholarship.deadline.strftime('%Y-%m-%d') if is_edit and scholarship.deadline else '' }}">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Status</label>
+          <div class="d-flex gap-8 align-center" style="margin-top:4px;">
+            <label style="display:flex; align-items:center; gap:6px; font-weight:400; margin:0; cursor:pointer;">
+              <input type="radio" name="is_active" value="1"
+                     {{ 'checked' if not is_edit or scholarship.is_active }}> Active
+            </label>
+            <label style="display:flex; align-items:center; gap:6px; font-weight:400; margin:0; cursor:pointer;">
+              <input type="radio" name="is_active" value="0"
+                     {{ 'checked' if is_edit and not scholarship.is_active }}> Inactive
+            </label>
+          </div>
+          <p class="form-hint">Only active scholarships are visible to students.</p>
+        </div>
+
+        <div class="form-group">
+          <label for="description">Description</label>
+          <textarea id="description" name="description" rows="6"
+            placeholder="Describe the purpose, goals, and background of this scholarship…">{{ scholarship.description if is_edit else '' }}</textarea>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="form-section" style="margin-bottom:20px;">
+        <div class="form-section-title">Eligibility Requirements</div>
+        <p class="text-sm td-muted" style="margin:0 0 16px;">These criteria help students check their eligibility before applying. Leave fields empty for no restriction.</p>
+
+        <div class="form-group">
+          <label for="required_major">Required Major / Program <span class="label-optional">optional</span></label>
+          <select id="required_major" name="required_major">
+            <option value="">Any major</option>
+            {% for m in majors %}
+            <option value="{{ m }}"
+              {{ 'selected' if is_edit and scholarship.criteria and scholarship.criteria.required_major == m }}>
+              {{ m }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="min_gpa">Minimum GPA <span class="label-optional">optional, 0.0–4.0</span></label>
+          <input type="text" id="min_gpa" name="min_gpa"
+                 value="{{ scholarship.criteria.min_gpa if is_edit and scholarship.criteria and scholarship.criteria.min_gpa else '' }}"
+                 placeholder="e.g. 3.50">
+        </div>
+
+        <div class="form-group">
+          <div class="checkbox-row">
+            <input type="checkbox" id="need_based" name="need_based" value="1"
+                   {{ 'checked' if is_edit and scholarship.criteria and scholarship.criteria.need_based }}>
+            <label for="need_based" style="margin:0; font-weight:400; cursor:pointer;">Financial need required</label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="criterion_text">Additional Requirements <span class="label-optional">optional</span></label>
+          <textarea id="criterion_text" name="criterion_text" rows="4"
+            placeholder="e.g. Must be a US citizen, community service required…">{{ scholarship.criteria.criterion_text if is_edit and scholarship.criteria and scholarship.criteria.criterion_text else '' }}</textarea>
+        </div>
+      </div>
+
+      <div class="d-flex gap-8">
+        <button type="submit" class="btn btn-primary">
+          {{ 'Save Changes' if is_edit else 'Create Scholarship' }}
+        </button>
+        <a href="{{ url_for('donor.scholarships') }}" class="btn btn-secondary">Cancel</a>
+      </div>
+    </div>
+
+  </div>
+</form>
+{% endblock %}

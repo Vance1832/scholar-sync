@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}{{ scholarship.title }}{% endblock %}
+{% block page_title %}Scholarship Details{% endblock %}
+
+{% block page_actions %}
+  <a href="{{ url_for('student.scholarships') }}" class="btn btn-secondary">← Back</a>
+{% endblock %}
+
+{% block sidebar %}{% include "shared/sidebar_student.html" %}{% endblock %}
+
+{% block content %}
+<div class="two-col" style="align-items:start;">
+
+  <div>
+    <div class="form-section" style="margin-bottom:20px;">
+      <h2 class="form-section-title">{{ scholarship.title }}</h2>
+      <div class="detail-block">
+        <div class="detail-label">Donor</div>
+        <div class="detail-value">{{ scholarship.donor.display_name }}</div>
+      </div>
+      <div class="detail-block">
+        <div class="detail-label">Award Amount</div>
+        <div class="detail-value fw-600" style="font-size:1.5rem; color:var(--color-success);">{{ format_currency(scholarship.amount) }}</div>
+      </div>
+      <div class="detail-block">
+        <div class="detail-label">Application Deadline</div>
+        <div class="detail-value">
+          {% if scholarship.deadline %}
+            {{ format_date(scholarship.deadline) }}
+          {% else %}
+            <span class="td-muted">No deadline</span>
+          {% endif %}
+        </div>
+      </div>
+      <div class="detail-block">
+        <div class="detail-label">Status</div>
+        <div class="detail-value">
+          <span class="badge {{ 'badge-active' if scholarship.is_active else 'badge-inactive' }}">
+            {{ 'Accepting Applications' if scholarship.is_active else 'Closed' }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section" style="margin-bottom:20px;">
+      <div class="form-section-title">Description</div>
+      <p style="margin:0; color:var(--color-text); line-height:1.7;">
+        {{ scholarship.description or 'No description provided.' }}
+      </p>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">Eligibility Requirements</div>
+      {% if scholarship.criteria %}
+        {% set c = scholarship.criteria %}
+        {% if c.min_gpa %}
+        <div class="detail-block">
+          <div class="detail-label">Minimum GPA</div>
+          <div class="detail-value">{{ c.min_gpa }}</div>
+        </div>
+        {% endif %}
+        {% if c.required_major and c.required_major != 'Any Major' %}
+        <div class="detail-block">
+          <div class="detail-label">Required Major</div>
+          <div class="detail-value">{{ c.required_major }}</div>
+        </div>
+        {% endif %}
+        {% if c.need_based %}
+        <div class="detail-block">
+          <div class="detail-label">Financial Need</div>
+          <div class="detail-value">Required</div>
+        </div>
+        {% endif %}
+        {% if c.criterion_text %}
+        <div class="detail-block">
+          <div class="detail-label">Additional Requirements</div>
+          <div class="detail-value">{{ c.criterion_text }}</div>
+        </div>
+        {% endif %}
+        {% if not c.min_gpa and not c.required_major and not c.need_based and not c.criterion_text %}
+        <p class="td-muted" style="margin:0;">Open to all students.</p>
+        {% endif %}
+      {% else %}
+        <p class="td-muted" style="margin:0;">Open to all students — no specific requirements.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div>
+    <div class="form-section" style="margin-bottom:20px;">
+      <div class="form-section-title">Your Eligibility</div>
+      {% if eligibility.eligible == true %}
+        <div style="color:var(--color-success); font-weight:600; margin-bottom:8px;">✓ You meet all requirements</div>
+        <p class="text-sm td-muted">You are eligible to apply for this scholarship.</p>
+      {% elif eligibility.eligible == false %}
+        <div style="color:var(--color-warning); font-weight:600; margin-bottom:8px;">⚠ You may not meet all requirements</div>
+        <ul style="margin:0; padding-left:18px; color:var(--color-text-muted); font-size:0.8125rem;">
+          {% for reason in eligibility.reasons %}
+          <li style="margin-bottom:4px;">{{ reason }}</li>
+          {% endfor %}
+        </ul>
+        <p class="text-sm td-muted" style="margin-top:10px;">You can still apply — the donor will make the final decision.</p>
+      {% else %}
+        <div style="color:var(--color-text-muted); margin-bottom:8px;">Complete your profile to check eligibility.</div>
+        <a href="{{ url_for('student.profile') }}" class="btn btn-secondary btn-sm">Complete Profile</a>
+      {% endif %}
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">Apply</div>
+      {% if existing_application %}
+        <div style="margin-bottom:12px;">
+          <span class="badge badge-{{ existing_application.status }}">{{ existing_application.status_label }}</span>
+          <span class="text-sm td-muted" style="margin-left:8px;">Applied {{ format_date(existing_application.date_applied) }}</span>
+        </div>
+        <p class="text-sm td-muted">You have already applied for this scholarship.</p>
+        <a href="{{ url_for('student.applications') }}" class="btn btn-secondary" style="margin-top:8px;">View My Applications</a>
+      {% elif not scholarship.is_active %}
+        <p class="text-sm td-muted">This scholarship is no longer accepting applications.</p>
+      {% else %}
+        <p class="text-sm td-muted" style="margin-bottom:16px;">Submit your application with a personal statement explaining why you deserve this scholarship.</p>
+        <a href="{{ url_for('student.apply', scholarship_id=scholarship.id) }}" class="btn btn-primary" style="width:100%; justify-content:center;">Apply Now</a>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}

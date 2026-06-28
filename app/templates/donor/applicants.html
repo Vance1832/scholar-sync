@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Applicants{% endblock %}
+{% block page_title %}Applicants{% endblock %}
+{% block page_subtitle %}<p class="page-subtitle">{{ applications|length }} application{{ 's' if applications|length != 1 }}</p>{% endblock %}
+
+{% block sidebar %}{% include "shared/sidebar_donor.html" %}{% endblock %}
+
+{% block content %}
+<div class="section-header" style="margin-bottom:16px;">
+  <form method="GET" class="d-flex gap-8 flex-wrap align-center">
+    <select name="scholarship_id" onchange="this.form.submit()" style="width:220px;">
+      <option value="">All scholarships</option>
+      {% for sch in my_scholarships %}
+      <option value="{{ sch.id }}" {{ 'selected' if scholarship_id == sch.id }}>{{ sch.title }}</option>
+      {% endfor %}
+    </select>
+    {% for s in ['', 'pending', 'approved', 'rejected'] %}
+    <a href="{{ url_for('donor.applicants', scholarship_id=scholarship_id or '', status=s) }}"
+       class="btn {{ 'btn-primary' if status_filter == s else 'btn-secondary' }} btn-sm">
+      {{ 'All' if s == '' else s.title() }}
+    </a>
+    {% endfor %}
+  </form>
+</div>
+
+{% if applications %}
+<div class="table-wrapper">
+  <table>
+    <thead>
+      <tr>
+        <th>Student</th>
+        <th>Scholarship</th>
+        <th>GPA</th>
+        <th>Major</th>
+        <th>Status</th>
+        <th>Applied</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for app in applications %}
+      <tr>
+        <td class="fw-600">{{ app.student.full_name }}</td>
+        <td class="td-muted">{{ app.scholarship.title }}</td>
+        <td class="td-muted">{{ '%.2f'|format(app.student.gpa_float) if app.student.gpa else '—' }}</td>
+        <td class="td-muted">{{ app.student.major or '—' }}</td>
+        <td><span class="badge badge-{{ app.status }}">{{ app.status_label }}</span></td>
+        <td class="td-muted">{{ format_date(app.date_applied, '%b %d, %Y') }}</td>
+        <td>
+          <div class="d-flex gap-8">
+            <a href="{{ url_for('donor.applicant_detail', app_id=app.id) }}" class="btn btn-secondary btn-sm">Review</a>
+            {% if app.status == 'pending' %}
+            <form method="POST" action="{{ url_for('donor.approve', app_id=app.id) }}" style="display:inline;">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-success btn-sm"
+                data-confirm="Approve this application? All other pending applications for this scholarship will be rejected.">Approve</button>
+            </form>
+            <form method="POST" action="{{ url_for('donor.reject', app_id=app.id) }}" style="display:inline;">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-danger btn-sm"
+                data-confirm="Reject this application?">Reject</button>
+            </form>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="empty-state card" style="padding:48px;">
+  <div class="empty-title">No applications found</div>
+  <div class="empty-desc">{% if scholarship_id %}No applications for this scholarship yet.{% else %}No students have applied to your scholarships yet.{% endif %}</div>
+</div>
+{% endif %}
+{% endblock %}

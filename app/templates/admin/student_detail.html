@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}{{ student.full_name }}{% endblock %}
+{% block page_title %}Student Detail{% endblock %}
+{% block page_actions %}
+  <a href="{{ url_for('admin.students') }}" class="btn btn-secondary">← Back</a>
+{% endblock %}
+
+{% block sidebar %}{% include "shared/sidebar_admin.html" %}{% endblock %}
+
+{% block content %}
+<div class="two-col" style="align-items:start;">
+
+  <div>
+    <div class="form-section" style="margin-bottom:20px;">
+      <div class="form-section-title">Personal Information</div>
+      <div class="detail-block">
+        <div class="detail-label">Student Code</div>
+        <div class="detail-value td-muted">{{ student.student_code or '—' }}</div>
+      </div>
+      <div class="detail-block">
+        <div class="detail-label">Full Name</div>
+        <div class="detail-value fw-600">{{ student.full_name }}</div>
+      </div>
+      <div class="detail-block">
+        <div class="detail-label">Username</div>
+        <div class="detail-value td-muted">{{ student.user.username }}</div>
+      </div>
+      <div class="detail-block">
+        <div class="detail-label">Email</div>
+        <div class="detail-value">{{ student.email or '—' }}</div>
+      </div>
+      <div class="detail-block">
+        <div class="detail-label">Phone</div>
+        <div class="detail-value">{{ student.phone or '—' }}</div>
+      </div>
+      <div class="detail-block">
+        <div class="detail-label">Address</div>
+        <div class="detail-value">{{ student.address or '—' }}</div>
+      </div>
+      <div class="detail-block">
+        <div class="detail-label">Date of Birth</div>
+        <div class="detail-value">{{ format_date(student.date_of_birth) if student.date_of_birth else '—' }}</div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">Academic Information</div>
+      <div class="form-row">
+        <div class="detail-block">
+          <div class="detail-label">Major</div>
+          <div class="detail-value">{{ student.major or '—' }}</div>
+        </div>
+        <div class="detail-block">
+          <div class="detail-label">GPA</div>
+          <div class="detail-value">{{ '%.2f'|format(student.gpa_float) if student.gpa else '—' }}</div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="detail-block">
+          <div class="detail-label">Academic Year</div>
+          <div class="detail-value">{{ student.academic_year or '—' }}</div>
+        </div>
+        <div class="detail-block">
+          <div class="detail-label">Department</div>
+          <div class="detail-value">{{ student.department or '—' }}</div>
+        </div>
+      </div>
+      <div class="detail-block">
+        <div class="detail-label">Profile Status</div>
+        <div class="detail-value">
+          <span class="badge {{ 'badge-active' if student.profile_completed else 'badge-inactive' }}">
+            {{ 'Complete' if student.profile_completed else 'Incomplete' }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="card" style="margin-bottom:20px;">
+      <div class="card-header">
+        <h3 class="card-title">Applications ({{ applications|length }})</h3>
+      </div>
+      {% if applications %}
+      <div class="table-wrapper" style="border:none;border-radius:0;box-shadow:none;">
+        <table>
+          <thead>
+            <tr>
+              <th>Scholarship</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Applied</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for app in applications %}
+            <tr>
+              <td class="fw-600">{{ app.scholarship.title }}</td>
+              <td>{{ format_currency(app.scholarship.amount) }}</td>
+              <td><span class="badge badge-{{ app.status }}">{{ app.status_label }}</span></td>
+              <td class="td-muted">{{ format_date(app.date_applied, '%b %d, %Y') }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state" style="padding:28px;">
+        <div class="empty-desc">No applications yet.</div>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title" style="color:var(--color-danger);">Danger Zone</div>
+      <p class="text-sm td-muted" style="margin:0 0 12px;">Permanently delete this student account and all associated data. This cannot be undone.</p>
+      <form method="POST" action="{{ url_for('admin.delete_user', user_id=student.user_id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-danger btn-sm"
+          data-confirm="Permanently delete {{ student.full_name }}'s account? This cannot be undone.">
+          Delete Account
+        </button>
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

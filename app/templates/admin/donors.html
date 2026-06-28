@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Donors{% endblock %}
+{% block page_title %}Donors{% endblock %}
+{% block page_subtitle %}<p class="page-subtitle">{{ donors|length }} registered</p>{% endblock %}
+
+{% block sidebar %}{% include "shared/sidebar_admin.html" %}{% endblock %}
+
+{% block content %}
+<div class="section-header">
+  <div></div>
+  <form method="GET" class="search-bar">
+    <input type="text" name="q" value="{{ q }}" placeholder="Search by name, email, or code…">
+    <button type="submit" class="btn btn-secondary">Search</button>
+    {% if q %}<a href="{{ url_for('admin.donors') }}" class="btn btn-secondary">Clear</a>{% endif %}
+  </form>
+</div>
+
+{% if donors %}
+<div class="table-wrapper">
+  <table>
+    <thead>
+      <tr>
+        <th>Code</th>
+        <th>Name / Organization</th>
+        <th>Type</th>
+        <th>Contact Email</th>
+        <th>Scholarships</th>
+        <th>Profile</th>
+        <th>Joined</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for d in donors %}
+      <tr>
+        <td class="td-muted text-sm">{{ d.donor_code or '—' }}</td>
+        <td class="fw-600">{{ d.display_name }}</td>
+        <td class="td-muted">{{ d.donor_type or '—' }}</td>
+        <td class="td-muted">{{ d.contact_email or '—' }}</td>
+        <td class="td-muted">{{ d.scholarships.count() }}</td>
+        <td>
+          <span class="badge {{ 'badge-active' if d.profile_completed else 'badge-inactive' }}">
+            {{ 'Complete' if d.profile_completed else 'Incomplete' }}
+          </span>
+        </td>
+        <td class="td-muted">{{ d.created_at.strftime('%b %d, %Y') if d.created_at else '—' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="empty-state card" style="padding:48px;">
+  <div class="empty-title">No donors found</div>
+  <div class="empty-desc">{% if q %}No donors match "{{ q }}".{% else %}No donors have registered yet.{% endif %}</div>
+</div>
+{% endif %}
+{% endblock %}

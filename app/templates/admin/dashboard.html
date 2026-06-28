@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Admin Dashboard{% endblock %}
+{% block page_subtitle %}<p class="page-subtitle">System overview</p>{% endblock %}
+
+{% block sidebar %}{% include "shared/sidebar_admin.html" %}{% endblock %}
+
+{% block content %}
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="stat-label">Students</div>
+    <div class="stat-value">{{ stats.students }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Donors</div>
+    <div class="stat-value">{{ stats.donors }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Scholarships</div>
+    <div class="stat-value">{{ stats.scholarships }}</div>
+    <div class="stat-sub">{{ stats.active_scholarships }} active</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Applications</div>
+    <div class="stat-value">{{ stats.applications }}</div>
+    <div class="stat-sub">{{ stats.pending_applications }} pending</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Approved</div>
+    <div class="stat-value" style="color:var(--color-success);">{{ stats.approved_applications }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Total Awarded</div>
+    <div class="stat-value" style="font-size:1.25rem;">{{ format_currency(stats.total_awarded) }}</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title">Recent Applications</h2>
+    <a href="{{ url_for('admin.applications') }}" class="btn btn-secondary btn-sm">View all</a>
+  </div>
+  {% if recent_applications %}
+  <div class="table-wrapper" style="border:none;border-radius:0;box-shadow:none;">
+    <table>
+      <thead>
+        <tr>
+          <th>Student</th>
+          <th>Scholarship</th>
+          <th>Donor</th>
+          <th>Amount</th>
+          <th>Status</th>
+          <th>Applied</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for app in recent_applications %}
+        <tr>
+          <td class="fw-600">{{ app.student.full_name }}</td>
+          <td class="td-muted">{{ app.scholarship.title }}</td>
+          <td class="td-muted">{{ app.scholarship.donor.display_name }}</td>
+          <td>{{ format_currency(app.scholarship.amount) }}</td>
+          <td><span class="badge badge-{{ app.status }}">{{ app.status_label }}</span></td>
+          <td class="td-muted">{{ format_date(app.date_applied, '%b %d, %Y') }}</td>
+          <td>
+            <a href="{{ url_for('admin.application_detail', app_id=app.id) }}" class="btn btn-secondary btn-sm">View</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-title">No applications yet</div>
+    <div class="empty-desc">Applications will appear here once students start applying.</div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
