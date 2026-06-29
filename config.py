@@ -22,9 +22,11 @@ class DevelopmentConfig(Config):
 
 class ProductionConfig(Config):
     DEBUG = False
-    _db_url = os.environ.get("DATABASE_URL", "")
-    # Render gives postgres:// but SQLAlchemy 2.x requires postgresql://
-    SQLALCHEMY_DATABASE_URI = _db_url.replace("postgres://", "postgresql://", 1) if _db_url else None
+    @staticmethod
+    def _get_db_url():
+        url = os.environ.get("DATABASE_URL", "")
+        return url.replace("postgres://", "postgresql://", 1) if url else None
+    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL", "").replace("postgres://", "postgresql://", 1) or None
 
 
 config = {
