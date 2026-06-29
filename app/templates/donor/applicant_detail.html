@@ -93,10 +93,49 @@
       {% endif %}
     </div>
 
+    {# ── Private rating ── #}
+    <div class="form-section" style="margin-bottom:20px;">
+      <div class="form-section-title">Your Private Rating</div>
+      <form method="POST" action="{{ url_for('donor.rate', app_id=application.id) }}" class="d-flex gap-8 align-center">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="star-picker" id="star-picker">
+          {% for i in range(1, 6) %}
+          <label class="star-pick-label {% if application.star_rating and i <= application.star_rating %}star-pick-active{% endif %}" data-val="{{ i }}">
+            <input type="radio" name="star_rating" value="{{ i }}" style="display:none;" {{ 'checked' if application.star_rating == i }}>★
+          </label>
+          {% endfor %}
+        </div>
+        <button type="submit" class="btn btn-secondary btn-sm">Save</button>
+        {% if application.star_rating %}
+          <span class="text-sm td-muted">{{ application.star_rating }}/5 — internal only</span>
+        {% endif %}
+      </form>
+    </div>
+
     {# ── Decision panel ── #}
-    {% if application.status == 'pending' %}
+    {% if application.status in ('pending', 'shortlisted') %}
     <div class="form-section">
       <div class="form-section-title">Make a Decision</div>
+
+      {# Shortlist form (only when pending) #}
+      {% if application.status == 'pending' %}
+      <form method="POST" action="{{ url_for('donor.shortlist', app_id=application.id) }}" style="margin-bottom:20px;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="star_rating" value="{{ application.star_rating or '' }}">
+        <div class="form-group">
+          <label for="shortlist_notes">Shortlist Notes <span class="label-optional">(optional, internal)</span></label>
+          <textarea id="shortlist_notes" name="reviewer_notes" rows="2"
+            placeholder="Why this applicant stands out…"></textarea>
+        </div>
+        <button type="submit" class="btn btn-secondary">Move to Shortlist</button>
+      </form>
+      <div style="border-top:1px solid var(--color-border); padding-top:20px; margin-bottom:20px;">
+      {% else %}
+      <div style="margin-bottom:20px;">
+        <span class="badge badge-shortlisted" style="margin-bottom:16px; display:inline-block;">Shortlisted</span>
+      </div>
+      <div style="margin-bottom:20px;">
+      {% endif %}
 
       {# Approve form #}
       <form method="POST" action="{{ url_for('donor.approve', app_id=application.id) }}" style="margin-bottom:20px;">
@@ -107,10 +146,11 @@
             placeholder="Any internal notes about this approval decision…"></textarea>
         </div>
         <button type="submit" class="btn btn-success"
-          data-confirm="Approve this application? All other pending applications for this scholarship will be automatically rejected.">
-          ✓ Approve Application
+          data-confirm="Approve this application? All other pending and shortlisted applications for this scholarship will be automatically rejected.">
+          Approve &amp; Award
         </button>
       </form>
+      </div>
 
       <div style="border-top:1px solid var(--color-border); padding-top:20px;">
         {# Reject form — reason is required #}
@@ -119,9 +159,9 @@
           <div class="form-group">
             <label for="rejection_reason">Rejection Reason <span style="color:var(--color-danger); font-size:0.8rem;">*required</span></label>
             <textarea id="rejection_reason" name="rejection_reason" rows="3" required
-              placeholder="Explain why this application is not being approved. This is recorded and visible to admins."></textarea>
+              placeholder="Explain why this application is not being approved. This is recorded internally."></textarea>
           </div>
-          <button type="submit" class="btn btn-danger">✕ Reject Application</button>
+          <button type="submit" class="btn btn-danger">Reject Application</button>
         </form>
       </div>
     </div>

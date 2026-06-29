@@ -8,7 +8,7 @@ from ..models.award import Award
 from ..services.scholarship import (
     get_donor_scholarships, create_scholarship, update_scholarship
 )
-from ..services.application import approve_application, reject_application
+from ..services.application import approve_application, reject_application, shortlist_application, rate_application
 from ..services.award import initiate_disbursement, confirm_payment, get_donor_awards
 from ..utils.helpers import MAJORS, DONOR_TYPES, PAYMENT_METHODS, format_currency, format_date
 
@@ -44,6 +44,16 @@ def dashboard():
     from ..models.application import Application
     sch_ids = [s.id for s in scholarships]
 
+    from ..models.award import Award
+    from ..extensions import db
+
+    awarded_total = db.session.query(db.func.sum(Award.amount)).join(
+        Application, Award.application_id == Application.id
+    ).filter(
+        Application.scholarship_id.in_(sch_ids),
+        Award.payment_status == "completed",
+    ).scalar() if sch_ids else 0
+
     stats = {
         "scholarships": len(scholarships),
         "active": sum(1 for s in scholarships if s.is_active),
@@ -52,7 +62,16 @@ def dashboard():
         ).count() if sch_ids else 0,
         "pending_applications": Application.query.filter(
             Application.scholarship_id.in_(sch_ids),
-            Application.status == "pending",
+            Application.status.in_(["pending", "shortlisted"]),
+        ).count() if sch_ids else 0,
+        "shortlisted": Application.query.filter(
+            Application.scholarship_id.in_(sch_ids),
+            Application.status == "shortlisted",
+        ).count() if sch_ids else 0,
+        "total_awarded": float(awarded_total or 0),
+        "awarded_count": Application.query.filter(
+            Application.scholarship_id.in_(sch_ids),
+            Application.status == "approved",
         ).count() if sch_ids else 0,
     }
 
@@ -228,6 +247,35 @@ def approve(app_id):
         application,
         reviewer_notes=request.form.get("reviewer_notes", ""),
     )
+    flash(msg, "success" if ok else "danger")
+    return redirect(url_for("donor.applicant_detail", app_id=app_id))
+
+
+@donor.route("/applicants/<int:app_id>/shortlist", methods=["POST"])
+@login_required
+@donor_required
+def shortlist(app_id):
+    application = Application.query.get_or_404(app_id)
+    if application.scholarship.donor_id != current_user.donor_profile.id:
+        abort(403)
+    ok, msg = shortlist_application(
+        application,
+        star_rating=request.form.get("star_rating", type=int),
+        reviewer_notes=request.form.get("reviewer_notes", ""),
+    )
+    flash(msg, "success" if ok else "danger")
+    return redirect(url_for("donor.applicants", scholarship_id=application.scholarship_id, status="shortlisted"))
+
+
+@donor.route("/applicants/<int:app_id>/rate", methods=["POST"])
+@login_required
+@donor_required
+def rate(app_id):
+    application = Application.query.get_or_404(app_id)
+    if application.scholarship.donor_id != current_user.donor_profile.id:
+        abort(403)
+    rating = request.form.get("star_rating", type=int) or 0
+    ok, msg = rate_application(application, rating)
     flash(msg, "success" if ok else "danger")
     return redirect(url_for("donor.applicant_detail", app_id=app_id))
 

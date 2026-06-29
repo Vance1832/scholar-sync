@@ -45,11 +45,26 @@ def dashboard():
         .all()
     )
 
+    from ..models.scholarship import Scholarship
+    from ..extensions import db as _db
+    from datetime import date as _date
+
+    # Sum of active open scholarships not yet applied to
+    applied_ids = [a.scholarship_id for a in Application.query.filter_by(student_id=profile.id).all()]
+    open_qs = Scholarship.query.filter_by(is_active=True).filter(
+        db.or_(Scholarship.deadline == None, Scholarship.deadline >= _date.today())
+    )
+    total_eligible = sum(
+        float(s.amount) for s in open_qs.all() if s.id not in applied_ids
+    )
+
     stats = {
         "total": Application.query.filter_by(student_id=profile.id).count(),
         "pending": Application.query.filter_by(student_id=profile.id, status="pending").count(),
+        "shortlisted": Application.query.filter_by(student_id=profile.id, status="shortlisted").count(),
         "approved": Application.query.filter_by(student_id=profile.id, status="approved").count(),
         "rejected": Application.query.filter_by(student_id=profile.id, status="rejected").count(),
+        "total_eligible": total_eligible,
     }
 
     return render_template(
@@ -139,6 +154,7 @@ def scholarships():
         "student/scholarships.html",
         scholarships=enriched,
         q=q,
+        today=date.today(),
         format_currency=format_currency,
         format_date=format_date,
     )

@@ -17,60 +17,79 @@
 </div>
 
 {% if scholarships %}
-<div class="table-wrapper">
-  <table>
-    <thead>
-      <tr>
-        <th>Scholarship</th>
-        <th>Amount</th>
-        <th>Deadline</th>
-        <th>Requirements</th>
-        <th>Eligibility</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for item in scholarships %}
-      {% set sch = item.scholarship %}
-      {% set elig = item.eligibility %}
-      <tr>
-        <td>
-          <div class="fw-600">{{ sch.title }}</div>
-          <div class="text-sm td-muted">{{ sch.donor.display_name }}</div>
-        </td>
-        <td class="fw-600">{{ format_currency(sch.amount) }}</td>
-        <td class="td-muted">
-          {% if sch.deadline %}
-            {% set days = (sch.deadline - today)|string if today is defined else '' %}
-            {{ format_date(sch.deadline) }}
-          {% else %}
-            Open
-          {% endif %}
-        </td>
-        <td class="td-muted text-sm">
-          {% if sch.criteria %}
-            {{ sch.criteria.as_display_string() }}
-          {% else %}
-            Open to all
-          {% endif %}
-        </td>
-        <td>
-          {% if elig.eligible == true %}
-            <span class="elig-badge elig-met">✓ Eligible</span>
-          {% elif elig.eligible == false %}
-            <span class="elig-badge elig-unmet">⚠ Check reqs</span>
-          {% else %}
-            <span class="elig-badge elig-unknown">Profile needed</span>
-          {% endif %}
-        </td>
-        <td>
-          <a href="{{ url_for('student.scholarship_detail', scholarship_id=sch.id) }}" class="btn btn-secondary btn-sm">View</a>
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+<div class="scholarship-grid">
+  {% for item in scholarships %}
+  {% set sch = item.scholarship %}
+  {% set elig = item.eligibility %}
+
+  <div class="scholarship-card {% if item.already_applied %}scholarship-card-applied{% endif %}">
+
+    <div class="scholarship-card-top">
+      <div class="scholarship-amount">{{ format_currency(sch.amount) }}</div>
+      <div class="d-flex gap-8 align-center flex-wrap">
+        {% if sch.effort_level == 'easy' %}
+          <span class="effort-tag effort-easy">Quick Apply</span>
+        {% elif sch.effort_level == 'essay' %}
+          <span class="effort-tag effort-essay">Essay Required</span>
+        {% else %}
+          <span class="effort-tag effort-detailed">Detailed</span>
+        {% endif %}
+
+        {% if elig.eligible == true %}
+          <span class="elig-badge elig-met">Eligible</span>
+        {% elif elig.eligible == false %}
+          <span class="elig-badge elig-unmet">Check reqs</span>
+        {% else %}
+          <span class="elig-badge elig-unknown">Profile needed</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="scholarship-card-title">{{ sch.title }}</div>
+    <div class="scholarship-card-donor">by {{ sch.donor.display_name }}</div>
+
+    {% if sch.description %}
+    <div class="scholarship-card-desc">{{ sch.description[:120] }}{% if sch.description|length > 120 %}…{% endif %}</div>
+    {% endif %}
+
+    <div class="scholarship-card-meta">
+      {% if sch.criteria %}
+        <span>{{ sch.criteria.as_display_string() }}</span>
+      {% else %}
+        <span>Open to all students</span>
+      {% endif %}
+    </div>
+
+    <div class="scholarship-card-footer">
+      <div class="scholarship-deadline">
+        {% if sch.deadline %}
+          {% set delta = (sch.deadline - today).days if today is defined else 99 %}
+          <span class="deadline-label {% if delta <= 7 %}deadline-urgent{% elif delta <= 14 %}deadline-soon{% endif %}">
+            Due {{ format_date(sch.deadline) }}
+            {% if delta <= 7 %}&nbsp;· {{ delta }}d left{% endif %}
+          </span>
+        {% else %}
+          <span class="deadline-label">No deadline</span>
+        {% endif %}
+      </div>
+
+      {% if item.already_applied %}
+        <span class="badge badge-{{ item.application_status }}">
+          {% if item.application_status == 'pending' %}Under Review
+          {% elif item.application_status == 'shortlisted' %}Shortlisted
+          {% elif item.application_status == 'approved' %}Awarded
+          {% elif item.application_status == 'rejected' %}Not Selected
+          {% else %}{{ item.application_status | title }}{% endif %}
+        </span>
+      {% else %}
+        <a href="{{ url_for('student.scholarship_detail', scholarship_id=sch.id) }}" class="btn btn-primary btn-sm">Apply</a>
+      {% endif %}
+    </div>
+
+  </div>
+  {% endfor %}
 </div>
+
 {% else %}
 <div class="empty-state card" style="padding:48px;">
   <div class="empty-title">No scholarships found</div>

@@ -57,8 +57,28 @@ def withdraw_application(application: Application, student: Student) -> tuple[bo
     return True, "Application withdrawn."
 
 
+def shortlist_application(application: Application, star_rating: int = None, reviewer_notes: str = None) -> tuple[bool, str]:
+    if application.status not in ("pending", "shortlisted"):
+        return False, f"Cannot shortlist an application with status '{application.status}'."
+    application.status = "shortlisted"
+    if star_rating and 1 <= star_rating <= 5:
+        application.star_rating = star_rating
+    if reviewer_notes and reviewer_notes.strip():
+        application.reviewer_notes = reviewer_notes.strip()
+    db.session.commit()
+    return True, "Applicant shortlisted."
+
+
+def rate_application(application: Application, star_rating: int) -> tuple[bool, str]:
+    if not (1 <= star_rating <= 5):
+        return False, "Rating must be between 1 and 5."
+    application.star_rating = star_rating
+    db.session.commit()
+    return True, "Rating saved."
+
+
 def approve_application(application: Application, reviewer_notes: str = None) -> tuple[bool, str]:
-    if application.status != "pending":
+    if application.status not in ("pending", "shortlisted"):
         return False, f"Application is already {application.status}."
 
     application.status = "approved"
@@ -66,11 +86,11 @@ def approve_application(application: Application, reviewer_notes: str = None) ->
     if reviewer_notes and reviewer_notes.strip():
         application.reviewer_notes = reviewer_notes.strip()
 
-    # Auto-reject other pending applications for the same scholarship
+    # Auto-reject other pending/shortlisted applications for the same scholarship
     Application.query.filter(
         Application.scholarship_id == application.scholarship_id,
         Application.id != application.id,
-        Application.status == "pending",
+        Application.status.in_(["pending", "shortlisted"]),
     ).update({
         "status": "rejected",
         "date_reviewed": datetime.utcnow(),

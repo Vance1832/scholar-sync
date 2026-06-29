@@ -324,6 +324,7 @@ a:hover { text-decoration: underline; }
 
 /* ── Auth pages ──────────────────────────────────────────── */
 
+/* Welcome / role-picker */
 .auth-layout {
   min-height: 100vh;
   display: flex;
@@ -343,6 +344,298 @@ a:hover { text-decoration: underline; }
   box-shadow: var(--shadow);
 }
 
+/* Split-panel layout for login / register */
+.auth-split {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 420px 1fr;
+}
+
+.auth-panel-left {
+  background: var(--color-sidebar);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 48px 44px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle grid texture */
+.auth-panel-left::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+}
+
+.auth-panel-left-content {
+  position: relative;
+  z-index: 1;
+}
+
+.auth-panel-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 64px;
+}
+
+.auth-panel-brand-icon {
+  width: 40px; height: 40px;
+  background: var(--color-primary);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+.auth-panel-brand-icon svg { width: 22px; height: 22px; color: #fff; }
+
+.auth-panel-brand-name {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #f8fafc;
+  letter-spacing: -0.3px;
+}
+
+.auth-panel-heading {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #f8fafc;
+  line-height: 1.2;
+  letter-spacing: -0.75px;
+  margin-bottom: 16px;
+}
+
+.auth-panel-sub {
+  font-size: 0.875rem;
+  color: #94a3b8;
+  line-height: 1.6;
+  max-width: 280px;
+}
+
+.auth-panel-role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #94a3b8;
+  margin-top: 48px;
+}
+
+.auth-panel-role-badge-dot {
+  width: 6px; height: 6px;
+  background: #22c55e;
+  border-radius: 50%;
+}
+
+.auth-panel-footer {
+  position: relative;
+  z-index: 1;
+  font-size: 0.75rem;
+  color: #475569;
+}
+
+.auth-panel-right {
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 60px;
+}
+
+.auth-form-wrap {
+  width: 100%;
+  max-width: 360px;
+}
+
+.auth-form-heading {
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: -0.5px;
+  margin-bottom: 6px;
+}
+
+.auth-form-sub {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+  margin-bottom: 32px;
+}
+
+.auth-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  margin-bottom: 36px;
+  text-decoration: none;
+}
+
+.auth-back-link:hover { color: var(--color-text); text-decoration: none; }
+
+/* Welcome role cards */
+.welcome-layout {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 380px 1fr;
+}
+
+.welcome-left {
+  background: var(--color-sidebar);
+  display: flex;
+  flex-direction: column;
+  padding: 48px 44px;
+  position: relative;
+  overflow: hidden;
+}
+
+.welcome-left::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+}
+
+.welcome-left-content { position: relative; z-index: 1; flex: 1; display: flex; flex-direction: column; }
+
+.welcome-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 0;
+}
+
+.welcome-brand-icon {
+  width: 40px; height: 40px;
+  background: var(--color-primary);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.welcome-brand-icon svg { width: 22px; height: 22px; color: #fff; }
+
+.welcome-brand-name {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #f8fafc;
+  letter-spacing: -0.3px;
+}
+
+.welcome-tagline {
+  margin-top: auto;
+  padding-top: 60px;
+}
+
+.welcome-tagline-text {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #f8fafc;
+  line-height: 1.25;
+  letter-spacing: -0.6px;
+  margin-bottom: 12px;
+}
+
+.welcome-tagline-sub {
+  font-size: 0.875rem;
+  color: #64748b;
+  line-height: 1.6;
+}
+
+.welcome-right {
+  background: var(--color-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 60px;
+}
+
+.welcome-content { width: 100%; max-width: 560px; }
+
+.welcome-heading {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 6px;
+  letter-spacing: -0.3px;
+}
+
+.welcome-desc {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+  margin-bottom: 32px;
+}
+
+.role-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.role-card {
+  background: #fff;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 28px 24px;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition);
+  display: block;
+}
+
+.role-card:hover {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.08);
+  transform: translateY(-1px);
+  text-decoration: none;
+}
+
+.role-card-icon {
+  width: 44px; height: 44px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 16px;
+}
+
+.role-card-icon svg { width: 22px; height: 22px; }
+
+.role-card-icon-student { background: #eff6ff; color: var(--color-primary); }
+.role-card-icon-donor { background: #f0fdf4; color: #16a34a; }
+
+.role-card-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 4px;
+}
+
+.role-card-desc {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+.role-card-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Legacy — keep for error pages */
 .auth-brand {
   text-align: center;
   margin-bottom: 32px;
@@ -408,55 +701,42 @@ a:hover { text-decoration: underline; }
 
 .stat-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1px;
   margin-bottom: 28px;
+  background: var(--color-border);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
 }
 
 .stat-card {
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: 20px 22px;
-  box-shadow: var(--shadow-sm);
+  padding: 22px 24px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
-
-.stat-icon {
-  width: 36px; height: 36px;
-  border-radius: 8px;
-  display: flex; align-items: center; justify-content: center;
-  margin-bottom: 12px;
-}
-
-.stat-icon svg { width: 18px; height: 18px; }
-.stat-icon-blue   { background: #eff6ff; color: #2563eb; }
-.stat-icon-green  { background: #f0fdf4; color: #16a34a; }
-.stat-icon-amber  { background: #fffbeb; color: #d97706; }
-.stat-icon-slate  { background: #f8fafc; color: #475569; }
 
 .stat-label {
   font-size: 0.75rem;
   font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
   color: var(--color-text-muted);
+  letter-spacing: 0.01em;
 }
 
 .stat-value {
-  font-size: 1.875rem;
+  font-size: 2rem;
   font-weight: 700;
   color: var(--color-text);
-  line-height: 1.1;
-  letter-spacing: -0.5px;
+  line-height: 1;
+  letter-spacing: -1px;
 }
 
 .stat-sub {
   font-size: 0.75rem;
   color: var(--color-text-muted);
-  margin-top: 2px;
 }
 
 /* ── Tables ──────────────────────────────────────────────── */
@@ -678,10 +958,11 @@ textarea { resize: vertical; min-height: 100px; }
   text-transform: capitalize;
 }
 
-.badge-pending    { background: #fef3c7; color: #92400e; }
-.badge-approved   { background: #dcfce7; color: #15803d; }
-.badge-rejected   { background: #fee2e2; color: #991b1b; }
-.badge-withdrawn  { background: #f1f5f9; color: #475569; }
+.badge-pending      { background: #f0f9ff; color: #0369a1; }
+.badge-shortlisted  { background: #faf5ff; color: #7c3aed; }
+.badge-approved     { background: #dcfce7; color: #15803d; }
+.badge-rejected     { background: #fee2e2; color: #991b1b; }
+.badge-withdrawn    { background: #f1f5f9; color: #475569; }
 .badge-active     { background: #dcfce7; color: #15803d; }
 .badge-inactive   { background: #f1f5f9; color: #475569; }
 .badge-paid       { background: #dcfce7; color: #15803d; }
@@ -885,4 +1166,277 @@ textarea { resize: vertical; min-height: 100px; }
   .main-content { margin-left: 0; }
   .topbar { left: 0; }
   .stat-grid { grid-template-columns: 1fr 1fr; }
+}
+
+/* ── Eligible banner ─────────────────────────────────────── */
+
+.eligible-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--color-primary);
+  color: #fff;
+  border-radius: var(--radius-lg);
+  padding: 16px 22px;
+  margin-bottom: 24px;
+}
+
+.eligible-banner-donor {
+  background: #15803d;
+}
+
+.eligible-banner-amount {
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  flex-shrink: 0;
+}
+
+.eligible-banner-label {
+  font-size: 0.875rem;
+  opacity: 0.85;
+}
+
+/* ── Scholarship cards ───────────────────────────────────── */
+
+.scholarship-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.scholarship-card {
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.scholarship-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: var(--shadow);
+}
+
+.scholarship-card-applied {
+  opacity: 0.75;
+}
+
+.scholarship-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.scholarship-amount {
+  font-size: 1.625rem;
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: -1px;
+  line-height: 1;
+}
+
+.scholarship-card-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text);
+  line-height: 1.3;
+}
+
+.scholarship-card-donor {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.scholarship-card-desc {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+  line-height: 1.55;
+}
+
+.scholarship-card-meta {
+  font-size: 0.75rem;
+  color: var(--color-text-light);
+  margin-top: 4px;
+}
+
+.scholarship-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border);
+}
+
+.deadline-label {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.deadline-urgent {
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
+.deadline-soon {
+  color: var(--color-warning);
+  font-weight: 500;
+}
+
+/* Effort tags */
+.effort-tag {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.effort-easy     { background: #dcfce7; color: #15803d; }
+.effort-essay    { background: #f0f9ff; color: #0369a1; }
+.effort-detailed { background: #faf5ff; color: #7c3aed; }
+
+/* ── Application pipeline (student) ─────────────────────── */
+
+.app-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.app-row {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.app-row-main { display: flex; flex-direction: column; gap: 4px; }
+
+.app-row-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.app-row-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.app-pipeline {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.pipeline-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.pipeline-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--color-border);
+  background: #fff;
+  transition: all var(--transition);
+}
+
+.pipeline-label {
+  font-size: 0.7rem;
+  color: var(--color-text-light);
+  white-space: nowrap;
+}
+
+.pipeline-line {
+  flex: 1;
+  height: 2px;
+  background: var(--color-border);
+  min-width: 24px;
+  margin-bottom: 14px;
+}
+
+.pipeline-line-done {
+  background: var(--color-primary);
+}
+
+.pipeline-done .pipeline-dot {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.pipeline-done .pipeline-label { color: var(--color-primary); font-weight: 500; }
+
+.pipeline-active .pipeline-dot {
+  background: #fff;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
+}
+
+.pipeline-active .pipeline-label { color: var(--color-text); font-weight: 600; }
+
+.pipeline-withdrawn .pipeline-dot { background: var(--color-border); border-color: var(--color-border); }
+.pipeline-withdrawn .pipeline-label { color: var(--color-text-light); }
+
+.app-row-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ── Star rating ─────────────────────────────────────────── */
+
+.star-display {
+  display: inline-flex;
+  gap: 1px;
+  font-size: 0.875rem;
+}
+
+.star-filled { color: #f59e0b; }
+.star-empty  { color: #e2e8f0; }
+
+.star-picker {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.star-pick-label {
+  font-size: 1.25rem;
+  color: #e2e8f0;
+  cursor: pointer;
+  transition: color var(--transition);
+  user-select: none;
+}
+
+.star-pick-label:hover,
+.star-pick-label.star-pick-active { color: #f59e0b; }
+
+/* ── Responsive additions ────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .scholarship-grid { grid-template-columns: 1fr; }
+  .app-pipeline { display: none; }
+  .welcome-layout, .auth-split { grid-template-columns: 1fr; }
+  .welcome-left, .auth-panel-left { display: none; }
+  .welcome-right, .auth-panel-right { padding: 32px 24px; }
+  .role-cards { grid-template-columns: 1fr; }
 }

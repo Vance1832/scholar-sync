@@ -12,62 +12,82 @@
 {% block content %}
 <div class="section-header">
   <div class="d-flex gap-8 flex-wrap">
-    {% for s in ['', 'pending', 'approved', 'rejected', 'withdrawn'] %}
+    {% for s, label in [('', 'All'), ('pending', 'Under Review'), ('shortlisted', 'Shortlisted'), ('approved', 'Awarded'), ('rejected', 'Not Selected'), ('withdrawn', 'Withdrawn')] %}
     <a href="{{ url_for('student.applications', status=s) }}"
        class="btn {{ 'btn-primary' if status_filter == s else 'btn-secondary' }} btn-sm">
-      {{ 'All' if s == '' else s.title() }}
+      {{ label }}
     </a>
     {% endfor %}
   </div>
 </div>
 
 {% if applications %}
-<div class="table-wrapper">
-  <table>
-    <thead>
-      <tr>
-        <th>Scholarship</th>
-        <th>Amount</th>
-        <th>Donor</th>
-        <th>Status</th>
-        <th>Applied</th>
-        <th>Reviewed</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for app in applications %}
-      <tr>
-        <td>
-          <div class="fw-600">{{ app.scholarship.title }}</div>
-        </td>
-        <td>{{ format_currency(app.scholarship.amount) }}</td>
-        <td class="td-muted">{{ app.scholarship.donor.display_name }}</td>
-        <td>
-          <span class="badge badge-{{ app.status }}">{{ app.status_label }}</span>
-          {% if app.award and app.award.payment_status == 'completed' %}
-            <span class="badge badge-paid" style="margin-left:4px;">Paid</span>
-          {% endif %}
-        </td>
-        <td class="td-muted">{{ format_date(app.date_applied, '%b %d, %Y') }}</td>
-        <td class="td-muted">{{ format_date(app.date_reviewed, '%b %d, %Y') if app.date_reviewed else '—' }}</td>
-        <td>
-          {% if app.status == 'pending' %}
-          <form method="POST" action="{{ url_for('student.withdraw', app_id=app.id) }}" style="display:inline;">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button type="submit" class="btn btn-secondary btn-sm"
-              data-confirm="Withdraw this application? This cannot be undone.">Withdraw</button>
-          </form>
-          {% endif %}
-        </td>
-      </tr>
+<div class="app-list">
+  {% for app in applications %}
+  <div class="app-row">
+
+    <div class="app-row-main">
+      <div class="app-row-title">{{ app.scholarship.title }}</div>
+      <div class="app-row-meta">
+        <span class="fw-600" style="color:var(--color-primary);">{{ format_currency(app.scholarship.amount) }}</span>
+        <span class="td-muted">·</span>
+        <span class="td-muted">{{ app.scholarship.donor.display_name }}</span>
+        <span class="td-muted">·</span>
+        <span class="td-muted">Applied {{ format_date(app.date_applied, '%b %d, %Y') }}</span>
+        {% if app.award and app.award.payment_status == 'completed' %}
+          <span class="td-muted">·</span>
+          <span class="badge badge-paid">Disbursed</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Status pipeline -->
+    <div class="app-pipeline">
+      {% set steps = [
+        ('Submitted', 1),
+        ('Under Review', 2),
+        ('Shortlisted', 3),
+        ('Decision', 4),
+      ] %}
+      {% for label, step in steps %}
+      <div class="pipeline-step
+        {% if app.status == 'withdrawn' %}pipeline-withdrawn
+        {% elif app.status_step > step %}pipeline-done
+        {% elif app.status_step == step %}pipeline-active
+        {% else %}pipeline-future{% endif %}">
+        <div class="pipeline-dot"></div>
+        <div class="pipeline-label">{{ label }}</div>
+      </div>
+      {% if not loop.last %}<div class="pipeline-line
+        {% if app.status != 'withdrawn' and app.status_step > step %}pipeline-line-done{% endif %}"></div>{% endif %}
       {% endfor %}
-    </tbody>
-  </table>
+    </div>
+
+    <!-- Final status badge + action -->
+    <div class="app-row-status">
+      <span class="badge badge-{{ app.status }}">{{ app.status_label }}</span>
+      {% if app.status == 'pending' %}
+      <form method="POST" action="{{ url_for('student.withdraw', app_id=app.id) }}" style="display:inline;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-secondary btn-sm"
+          data-confirm="Withdraw this application? This cannot be undone.">Withdraw</button>
+      </form>
+      {% endif %}
+      {% if app.status == 'approved' and app.award %}
+        {% if app.award.payment_status == 'completed' %}
+          <span class="text-sm td-muted">Payment confirmed</span>
+        {% else %}
+          <span class="text-sm td-muted">Disbursement in progress</span>
+        {% endif %}
+      {% endif %}
+    </div>
+
+  </div>
+  {% endfor %}
 </div>
 {% else %}
 <div class="empty-state card" style="padding:48px;">
-  <div class="empty-title">No applications{% if status_filter %} with status "{{ status_filter }}"{% endif %}</div>
+  <div class="empty-title">No applications{% if status_filter %} with this status{% endif %}</div>
   <div class="empty-desc">Browse available scholarships and submit your first application.</div>
   <a href="{{ url_for('student.scholarships') }}" class="btn btn-primary" style="margin-top:16px;">Browse Scholarships</a>
 </div>

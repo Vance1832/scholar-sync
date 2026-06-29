@@ -15,10 +15,10 @@
       <option value="{{ sch.id }}" {{ 'selected' if scholarship_id == sch.id }}>{{ sch.title }}</option>
       {% endfor %}
     </select>
-    {% for s in ['', 'pending', 'approved', 'rejected'] %}
+    {% for s, label in [('', 'All'), ('pending', 'Under Review'), ('shortlisted', 'Shortlisted'), ('approved', 'Awarded'), ('rejected', 'Not Selected')] %}
     <a href="{{ url_for('donor.applicants', scholarship_id=scholarship_id or '', status=s) }}"
        class="btn {{ 'btn-primary' if status_filter == s else 'btn-secondary' }} btn-sm">
-      {{ 'All' if s == '' else s.title() }}
+      {{ label }}
     </a>
     {% endfor %}
   </form>
@@ -33,6 +33,7 @@
         <th>Scholarship</th>
         <th>GPA</th>
         <th>Major</th>
+        <th>Rating</th>
         <th>Status</th>
         <th>Applied</th>
         <th></th>
@@ -45,21 +46,26 @@
         <td class="td-muted">{{ app.scholarship.title }}</td>
         <td class="td-muted">{{ '%.2f'|format(app.student.gpa_float) if app.student.gpa else '—' }}</td>
         <td class="td-muted">{{ app.student.major or '—' }}</td>
+        <td>
+          {% if app.star_rating %}
+            <span class="star-display">
+              {% for i in range(1, 6) %}
+                <span class="{{ 'star-filled' if i <= app.star_rating else 'star-empty' }}">★</span>
+              {% endfor %}
+            </span>
+          {% else %}
+            <span class="td-muted">—</span>
+          {% endif %}
+        </td>
         <td><span class="badge badge-{{ app.status }}">{{ app.status_label }}</span></td>
         <td class="td-muted">{{ format_date(app.date_applied, '%b %d, %Y') }}</td>
         <td>
           <div class="d-flex gap-8">
             <a href="{{ url_for('donor.applicant_detail', app_id=app.id) }}" class="btn btn-secondary btn-sm">Review</a>
             {% if app.status == 'pending' %}
-            <form method="POST" action="{{ url_for('donor.approve', app_id=app.id) }}" style="display:inline;">
+            <form method="POST" action="{{ url_for('donor.shortlist', app_id=app.id) }}" style="display:inline;">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-              <button type="submit" class="btn btn-success btn-sm"
-                data-confirm="Approve this application? All other pending applications for this scholarship will be rejected.">Approve</button>
-            </form>
-            <form method="POST" action="{{ url_for('donor.reject', app_id=app.id) }}" style="display:inline;">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-              <button type="submit" class="btn btn-danger btn-sm"
-                data-confirm="Reject this application?">Reject</button>
+              <button type="submit" class="btn btn-secondary btn-sm">Shortlist</button>
             </form>
             {% endif %}
           </div>

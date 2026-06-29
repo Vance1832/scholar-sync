@@ -11,30 +11,39 @@
 {% block sidebar %}{% include "shared/sidebar_student.html" %}{% endblock %}
 
 {% block content %}
+
+{% if stats.total_eligible > 0 %}
+<div class="eligible-banner">
+  <div class="eligible-banner-amount">{{ format_currency(stats.total_eligible) }}</div>
+  <div class="eligible-banner-label">available in scholarships you haven't applied to yet</div>
+  <a href="{{ url_for('student.scholarships') }}" class="btn btn-primary btn-sm" style="margin-left:auto; flex-shrink:0;">Browse now</a>
+</div>
+{% endif %}
+
+{% if not profile.profile_completed %}
+<div class="flash flash-warning" style="margin-bottom:20px; position:static; max-width:100%;">
+  <span>Your profile is incomplete. <a href="{{ url_for('student.profile') }}">Complete your profile</a> to unlock eligibility checks and scholarship recommendations.</span>
+</div>
+{% endif %}
+
 <div class="stat-grid">
   <div class="stat-card">
     <div class="stat-label">Total Applications</div>
     <div class="stat-value">{{ stats.total }}</div>
   </div>
   <div class="stat-card">
-    <div class="stat-label">Pending Review</div>
-    <div class="stat-value" style="color:var(--color-warning);">{{ stats.pending }}</div>
+    <div class="stat-label">Under Review</div>
+    <div class="stat-value">{{ stats.pending }}</div>
   </div>
   <div class="stat-card">
-    <div class="stat-label">Approved</div>
-    <div class="stat-value" style="color:var(--color-success);">{{ stats.approved }}</div>
+    <div class="stat-label">Shortlisted</div>
+    <div class="stat-value">{{ stats.shortlisted }}</div>
   </div>
   <div class="stat-card">
-    <div class="stat-label">Rejected</div>
-    <div class="stat-value" style="color:var(--color-danger);">{{ stats.rejected }}</div>
+    <div class="stat-label">Awarded</div>
+    <div class="stat-value">{{ stats.approved }}</div>
   </div>
 </div>
-
-{% if not profile.profile_completed %}
-<div class="flash flash-warning" style="margin-bottom:20px; position:static; max-width:100%;">
-  <span>Your profile is incomplete. <a href="{{ url_for('student.profile') }}">Complete your profile</a> to see eligibility status for scholarships.</span>
-</div>
-{% endif %}
 
 <div class="card">
   <div class="card-header">
@@ -58,7 +67,9 @@
         <tr>
           <td class="fw-600">{{ app.scholarship.title }}</td>
           <td>{{ format_currency(app.scholarship.amount) }}</td>
-          <td><span class="badge badge-{{ app.status }}">{{ app.status_label }}</span></td>
+          <td>
+            <span class="badge badge-{{ app.status }}">{{ app.status_label }}</span>
+          </td>
           <td class="td-muted">{{ format_date(app.date_applied, '%b %d, %Y') }}</td>
           <td class="td-muted">{{ app.scholarship.donor.display_name }}</td>
         </tr>

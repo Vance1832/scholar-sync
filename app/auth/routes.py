@@ -12,7 +12,14 @@ def _role_dashboard(role):
 def index():
     if current_user.is_authenticated:
         return _role_dashboard(current_user.role)
-    return redirect(url_for("auth.login"))
+    return redirect(url_for("auth.welcome"))
+
+
+@auth.route("/welcome")
+def welcome():
+    if current_user.is_authenticated:
+        return _role_dashboard(current_user.role)
+    return render_template("auth/welcome.html")
 
 
 @auth.route("/login", methods=["GET", "POST"])
@@ -20,25 +27,21 @@ def login():
     if current_user.is_authenticated:
         return _role_dashboard(current_user.role)
 
+    role = request.args.get("role", request.form.get("role", ""))
+    if role not in ("student", "donor"):
+        return redirect(url_for("auth.welcome"))
+
     if request.method == "POST":
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "")
-        role = request.form.get("role", "student")
-
-        # Public login only allows student and donor
-        if role not in ("student", "donor"):
-            flash("Invalid login.", "danger")
-            return render_template("auth/login.html")
-
         user = authenticate(username, password, role)
         if user:
             login_user(user, remember=request.form.get("remember") == "on")
             next_page = request.args.get("next")
             return redirect(next_page or url_for(f"{role}.dashboard"))
-
         flash("Invalid username or password.", "danger")
 
-    return render_template("auth/login.html")
+    return render_template("auth/login.html", role=role)
 
 
 @auth.route("/admin/login", methods=["GET", "POST"])
@@ -68,23 +71,22 @@ def register():
     if current_user.is_authenticated:
         return _role_dashboard(current_user.role)
 
+    role = request.args.get("role", request.form.get("role", ""))
+    if role not in ("student", "donor"):
+        return redirect(url_for("auth.welcome"))
+
     if request.method == "POST":
         username = request.form.get("username", "")
         password = request.form.get("password", "")
         confirm = request.form.get("confirm", "")
-        role = request.form.get("role", "student")
-
-        if role not in ("student", "donor"):
-            flash("Invalid role selected.", "danger")
-            return render_template("auth/register.html")
 
         ok, msg = register_user(username, password, confirm, role)
         if ok:
             flash(msg, "success")
-            return redirect(url_for("auth.login"))
+            return redirect(url_for("auth.login", role=role))
         flash(msg, "danger")
 
-    return render_template("auth/register.html")
+    return render_template("auth/register.html", role=role)
 
 
 @auth.route("/logout")

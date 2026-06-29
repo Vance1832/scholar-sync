@@ -41,6 +41,7 @@ class Scholarship(db.Model):
     is_active = db.Column(db.Boolean, default=True)
     slots = db.Column(db.Integer, default=1)
     category = db.Column(db.String(64))
+    effort_level = db.Column(db.String(16), default="essay")  # easy | essay | detailed
     created_at = db.Column(db.DateTime, default=db.func.now())
 
     donor = db.relationship("Donor", back_populates="scholarships")
