@@ -26,11 +26,41 @@ def create_app(config_name: str = "default") -> Flask:
 
     with app.app_context():
         db.create_all()
+        _migrate_schema()
         _seed_admin()
 
     _register_error_handlers(app)
 
     return app
+
+
+def _migrate_schema() -> None:
+    """Add columns that didn't exist in earlier schema versions."""
+    from sqlalchemy import text
+    from .extensions import db
+
+    migrations = [
+        # applications table
+        "ALTER TABLE applications ADD COLUMN star_rating INTEGER",
+        "ALTER TABLE applications ADD COLUMN personal_statement TEXT",
+        "ALTER TABLE applications ADD COLUMN financial_need TEXT",
+        "ALTER TABLE applications ADD COLUMN intended_use TEXT",
+        "ALTER TABLE applications ADD COLUMN rejection_reason TEXT",
+        "ALTER TABLE applications ADD COLUMN reviewer_notes TEXT",
+        "ALTER TABLE applications ADD COLUMN date_reviewed TIMESTAMP",
+        # scholarships table
+        "ALTER TABLE scholarships ADD COLUMN effort_level VARCHAR(16) DEFAULT 'essay'",
+        # awards table
+        "ALTER TABLE awards ADD COLUMN recipient_account VARCHAR(512)",
+        "ALTER TABLE awards ADD COLUMN disbursement_proof TEXT",
+    ]
+
+    for sql in migrations:
+        try:
+            db.session.execute(text(sql))
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
 
 
 def _register_error_handlers(app: Flask) -> None:

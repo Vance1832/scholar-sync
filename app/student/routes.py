@@ -52,7 +52,7 @@ def dashboard():
     # Sum of active open scholarships not yet applied to
     applied_ids = [a.scholarship_id for a in Application.query.filter_by(student_id=profile.id).all()]
     open_qs = Scholarship.query.filter_by(is_active=True).filter(
-        db.or_(Scholarship.deadline == None, Scholarship.deadline >= _date.today())
+        _db.or_(Scholarship.deadline == None, Scholarship.deadline >= _date.today())
     )
     total_eligible = sum(
         float(s.amount) for s in open_qs.all() if s.id not in applied_ids
