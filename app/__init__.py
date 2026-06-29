@@ -28,7 +28,25 @@ def create_app(config_name: str = "default") -> Flask:
         db.create_all()
         _seed_admin()
 
+    _register_error_handlers(app)
+
     return app
+
+
+def _register_error_handlers(app: Flask) -> None:
+    from flask import render_template
+
+    @app.errorhandler(403)
+    def forbidden(e):
+        return render_template("errors/403.html"), 403
+
+    @app.errorhandler(404)
+    def not_found(e):
+        return render_template("errors/404.html"), 404
+
+    @app.errorhandler(500)
+    def server_error(e):
+        return render_template("errors/500.html"), 500
 
 
 def _seed_admin():

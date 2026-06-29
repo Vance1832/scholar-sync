@@ -22,6 +22,18 @@ def donor_required(f):
     return decorated
 
 
+def profile_required(f):
+    """Redirect to profile page if donor hasn't completed their profile."""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        profile = current_user.donor_profile
+        if not profile or not profile.profile_completed:
+            flash("Please complete your organization profile before continuing.", "warning")
+            return redirect(url_for("donor.profile"))
+        return f(*args, **kwargs)
+    return decorated
+
+
 @donor.route("/dashboard")
 @login_required
 @donor_required
@@ -99,6 +111,7 @@ def scholarships():
 @donor.route("/scholarships/new", methods=["GET", "POST"])
 @login_required
 @donor_required
+@profile_required
 def scholarship_new():
     profile = current_user.donor_profile
     if request.method == "POST":
@@ -125,6 +138,7 @@ def scholarship_new():
 @donor.route("/scholarships/<int:scholarship_id>/edit", methods=["GET", "POST"])
 @login_required
 @donor_required
+@profile_required
 def scholarship_edit(scholarship_id):
     sch = Scholarship.query.get_or_404(scholarship_id)
     if sch.donor_id != current_user.donor_profile.id:

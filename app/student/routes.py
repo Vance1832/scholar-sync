@@ -1,10 +1,10 @@
+from datetime import date
 from flask import render_template, redirect, url_for, request, flash, abort
 from flask_login import login_required, current_user
 from functools import wraps
 from . import student
 from ..models.application import Application
 from ..models.scholarship import Scholarship
-from ..services.scholarship import get_active_scholarships
 from ..services.application import submit_application, withdraw_application
 from ..services.eligibility import eligibility_summary
 from ..utils.helpers import MAJORS, ACADEMIC_YEARS, format_currency, format_date
@@ -19,13 +19,23 @@ def student_required(f):
     return decorated
 
 
+def profile_required(f):
+    """Redirect to profile page if student hasn't completed their profile."""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        profile = current_user.student_profile
+        if not profile or not profile.profile_completed:
+            flash("Please complete your profile before continuing.", "warning")
+            return redirect(url_for("student.profile"))
+        return f(*args, **kwargs)
+    return decorated
+
+
 @student.route("/dashboard")
 @login_required
 @student_required
 def dashboard():
     profile = current_user.student_profile
-    if not profile:
-        abort(500)
 
     my_apps = (
         Application.query
@@ -84,10 +94,10 @@ def profile():
             try:
                 p.date_of_birth = datetime.strptime(dob_str, "%Y-%m-%d").date()
             except ValueError:
-                flash("Invalid date of birth format", "danger")
+                flash("Invalid date of birth format.", "danger")
                 return render_template("student/profile.html", profile=p, majors=MAJORS, academic_years=ACADEMIC_YEARS)
 
-        p.profile_completed = bool(p.first_name and p.last_name and p.major)
+        p.profile_completed = bool(p.first_name and p.last_name and p.major and p.gpa)
         db.session.commit()
         flash("Profile updated successfully.", "success")
         return redirect(url_for("student.profile"))
@@ -98,12 +108,15 @@ def profile():
 @student.route("/scholarships")
 @login_required
 @student_required
+@profile_required
 def scholarships():
     profile = current_user.student_profile
     q = request.args.get("q", "").strip()
-    major_filter = request.args.get("major", "").strip()
 
-    query = Scholarship.query.filter_by(is_active=True)
+    # Only show active scholarships that haven't passed their deadline
+    query = Scholarship.query.filter_by(is_active=True).filter(
+        db.or_(Scholarship.deadline == None, Scholarship.deadline >= date.today())
+    )
     if q:
         query = query.filter(Scholarship.title.ilike(f"%{q}%"))
 
@@ -111,8 +124,16 @@ def scholarships():
 
     enriched = []
     for sch in all_scholarships:
+        existing = Application.query.filter_by(
+            student_id=profile.id, scholarship_id=sch.id
+        ).first()
         eligibility = eligibility_summary(profile, sch)
-        enriched.append({"scholarship": sch, "eligibility": eligibility})
+        enriched.append({
+            "scholarship": sch,
+            "eligibility": eligibility,
+            "already_applied": existing is not None,
+            "application_status": existing.status if existing else None,
+        })
 
     return render_template(
         "student/scholarships.html",
@@ -128,21 +149,28 @@ def scholarships():
 @student_required
 def scholarship_detail(scholarship_id):
     sch = Scholarship.query.get_or_404(scholarship_id)
-    profile = current_user.student_profile
 
+    # Students can only view active scholarships
+    if not sch.is_active:
+        flash("This scholarship is no longer available.", "warning")
+        return redirect(url_for("student.scholarships"))
+
+    profile = current_user.student_profile
     eligibility = eligibility_summary(profile, sch)
 
-    existing = None
-    if profile:
-        existing = Application.query.filter_by(
-            student_id=profile.id, scholarship_id=sch.id
-        ).first()
+    existing = Application.query.filter_by(
+        student_id=profile.id, scholarship_id=sch.id
+    ).first()
+
+    # Check if deadline has passed
+    deadline_passed = sch.deadline and sch.deadline < date.today()
 
     return render_template(
         "student/scholarship_detail.html",
         scholarship=sch,
         eligibility=eligibility,
         existing_application=existing,
+        deadline_passed=deadline_passed,
         format_currency=format_currency,
         format_date=format_date,
     )
@@ -151,9 +179,28 @@ def scholarship_detail(scholarship_id):
 @student.route("/scholarships/<int:scholarship_id>/apply", methods=["GET", "POST"])
 @login_required
 @student_required
+@profile_required
 def apply(scholarship_id):
     sch = Scholarship.query.get_or_404(scholarship_id)
     profile = current_user.student_profile
+
+    # Guard: scholarship must be active
+    if not sch.is_active:
+        flash("This scholarship is no longer accepting applications.", "danger")
+        return redirect(url_for("student.scholarships"))
+
+    # Guard: deadline must not have passed
+    if sch.deadline and sch.deadline < date.today():
+        flash("The deadline for this scholarship has passed.", "danger")
+        return redirect(url_for("student.scholarships"))
+
+    # Guard: no duplicate application
+    existing = Application.query.filter_by(
+        student_id=profile.id, scholarship_id=sch.id
+    ).first()
+    if existing:
+        flash("You have already applied for this scholarship.", "warning")
+        return redirect(url_for("student.applications"))
 
     if request.method == "POST":
         ok, msg = submit_application(
@@ -206,6 +253,11 @@ def applications():
 def withdraw(app_id):
     application = Application.query.get_or_404(app_id)
     profile = current_user.student_profile
+
+    # Ownership check — students can only withdraw their own applications
+    if application.student_id != profile.id:
+        abort(403)
+
     ok, msg = withdraw_application(application, profile)
     flash(msg, "success" if ok else "danger")
     return redirect(url_for("student.applications"))
@@ -233,3 +285,7 @@ def settings():
             flash(msg, "success" if ok else "danger")
 
     return render_template("student/settings.html")
+
+
+# Import db for query filters
+from ..extensions import db
