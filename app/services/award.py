@@ -1,6 +1,31 @@
-from datetime import date
+from datetime import date, datetime
 from ..extensions import db
 from ..models.award import Award
+
+
+def accept_award(award: Award, student_payment_info: str) -> tuple[bool, str]:
+    if award.payment_status != "pending_acceptance":
+        return False, "This award is not awaiting acceptance."
+    info = (student_payment_info or "").strip()
+    if not info:
+        return False, "Please provide your payment details (bank account or school ID)."
+
+    award.student_accepted = True
+    award.student_payment_info = info
+    award.accepted_at = datetime.utcnow()
+    award.payment_status = "pending"
+    db.session.commit()
+
+    try:
+        from .email import send_award_accepted_to_donor
+        from .audit import log
+        send_award_accepted_to_donor(award)
+        log("award_accepted", "award", award.id,
+            f"{award.student.full_name} accepted award for {award.scholarship.title}")
+    except Exception:
+        pass
+
+    return True, "Award accepted. The donor will now arrange the transfer."
 
 
 def initiate_disbursement(
@@ -9,7 +34,8 @@ def initiate_disbursement(
     recipient_account: str,
     notes: str = None,
 ) -> tuple[bool, str]:
-    """Set recipient details and move award to 'processing' state."""
+    if award.payment_status == "pending_acceptance":
+        return False, "The student has not yet accepted this award."
     if award.payment_status not in ("pending",):
         return False, f"Award is already {award.payment_status}."
 
@@ -26,6 +52,14 @@ def initiate_disbursement(
         award.notes = (award.notes or "") + f" | {notes.strip()}"
 
     db.session.commit()
+
+    try:
+        from .audit import log
+        log("disbursement_initiated", "award", award.id,
+            f"Disbursement initiated for {award.student.full_name}")
+    except Exception:
+        pass
+
     return True, "Disbursement initiated. Enter the transfer reference to confirm payment."
 
 
@@ -34,7 +68,6 @@ def confirm_payment(
     payment_reference: str,
     disbursement_proof: str,
 ) -> tuple[bool, str]:
-    """Confirm transfer with reference number and proof — marks award as completed."""
     if award.payment_status not in ("processing",):
         return False, "Award must be in 'Processing' state to confirm payment."
 
@@ -50,8 +83,17 @@ def confirm_payment(
     award.payment_reference = ref
     award.disbursement_proof = proof
     award.disbursement_date = date.today()
-
     db.session.commit()
+
+    try:
+        from .email import send_disbursement_confirmed
+        from .audit import log
+        send_disbursement_confirmed(award)
+        log("payment_confirmed", "award", award.id,
+            f"Payment confirmed for {award.student.full_name}, ref {ref}")
+    except Exception:
+        pass
+
     return True, "Payment confirmed. Award marked as disbursed."
 
 

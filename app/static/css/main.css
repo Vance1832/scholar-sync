@@ -1440,3 +1440,24 @@ textarea { resize: vertical; min-height: 100px; }
   .welcome-right, .auth-panel-right { padding: 32px 24px; }
   .role-cards { grid-template-columns: 1fr; }
 }
+
+/* ── New badge states ────────────────────────────────────── */
+.badge-pending_acceptance { background: #fef9c3; color: #854d0e; }
+
+/* ── Audit log action tags ───────────────────────────────── */
+.action-tag {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: capitalize;
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+}
+.action-application { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+.action-award       { background: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
+.action-payment     { background: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
+.action-disbursement{ background: #faf5ff; color: #7c3aed; border-color: #e9d5ff; }
+.action-user        { background: #fff7ed; color: #c2410c; border-color: #fed7aa; }

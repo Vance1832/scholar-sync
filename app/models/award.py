@@ -9,13 +9,16 @@ class Award(db.Model):
 
     amount = db.Column(db.Numeric(12, 2), nullable=False)
     award_date = db.Column(db.Date, default=db.func.current_date())
-    payment_status = db.Column(db.String(16), default="pending")  # pending | processing | completed | failed | cancelled
+    payment_status = db.Column(db.String(24), default="pending_acceptance")  # pending_acceptance | accepted | processing | completed | failed | cancelled
     payment_method = db.Column(db.String(64))
-    payment_reference = db.Column(db.String(256))    # Required to mark as paid
-    recipient_account = db.Column(db.String(512))    # Bank/account details for transfer
+    payment_reference = db.Column(db.String(256))
+    recipient_account = db.Column(db.String(512))
     disbursement_date = db.Column(db.Date)
     notes = db.Column(db.Text)
-    disbursement_proof = db.Column(db.Text)          # Confirmation text / receipt note
+    disbursement_proof = db.Column(db.Text)
+    student_accepted = db.Column(db.Boolean, default=False)
+    student_payment_info = db.Column(db.Text)
+    accepted_at = db.Column(db.DateTime)
 
     application = db.relationship("Application", back_populates="award")
 

@@ -43,6 +43,16 @@ def submit_application(
     )
     db.session.add(application)
     db.session.commit()
+
+    try:
+        from .email import send_application_received
+        from .audit import log
+        send_application_received(application)
+        log("application_submitted", "application", application.id,
+            f"{student.full_name} applied for {scholarship.title}")
+    except Exception:
+        pass
+
     return True, "Application submitted successfully."
 
 
@@ -54,6 +64,14 @@ def withdraw_application(application: Application, student: Student) -> tuple[bo
     application.status = "withdrawn"
     application.date_reviewed = datetime.utcnow()
     db.session.commit()
+
+    try:
+        from .audit import log
+        log("application_withdrawn", "application", application.id,
+            f"{student.full_name} withdrew from {application.scholarship.title}")
+    except Exception:
+        pass
+
     return True, "Application withdrawn."
 
 
@@ -66,6 +84,16 @@ def shortlist_application(application: Application, star_rating: int = None, rev
     if reviewer_notes and reviewer_notes.strip():
         application.reviewer_notes = reviewer_notes.strip()
     db.session.commit()
+
+    try:
+        from .email import send_shortlisted
+        from .audit import log
+        send_shortlisted(application)
+        log("application_shortlisted", "application", application.id,
+            f"{application.student.full_name} shortlisted for {application.scholarship.title}")
+    except Exception:
+        pass
+
     return True, "Applicant shortlisted."
 
 
@@ -86,7 +114,6 @@ def approve_application(application: Application, reviewer_notes: str = None) ->
     if reviewer_notes and reviewer_notes.strip():
         application.reviewer_notes = reviewer_notes.strip()
 
-    # Auto-reject other pending/shortlisted applications for the same scholarship
     Application.query.filter(
         Application.scholarship_id == application.scholarship_id,
         Application.id != application.id,
@@ -103,13 +130,23 @@ def approve_application(application: Application, reviewer_notes: str = None) ->
         award = Award(
             application_id=application.id,
             amount=application.scholarship.amount,
-            payment_status="pending",
+            payment_status="pending_acceptance",
             notes=f"Approved for {application.student.full_name} — {application.scholarship.title}",
         )
         db.session.add(award)
 
     db.session.commit()
-    return True, "Application approved. Awaiting disbursement setup."
+
+    try:
+        from .email import send_awarded
+        from .audit import log
+        send_awarded(application)
+        log("application_approved", "application", application.id,
+            f"{application.student.full_name} awarded {application.scholarship.title}")
+    except Exception:
+        pass
+
+    return True, "Application approved. Student has been notified to accept the award."
 
 
 def reject_application(application: Application, reason: str) -> tuple[bool, str]:
@@ -126,4 +163,14 @@ def reject_application(application: Application, reason: str) -> tuple[bool, str
     application.rejection_reason = reason
     application.date_reviewed = datetime.utcnow()
     db.session.commit()
+
+    try:
+        from .email import send_rejected
+        from .audit import log
+        send_rejected(application)
+        log("application_rejected", "application", application.id,
+            f"{application.student.full_name} rejected from {application.scholarship.title}: {reason}")
+    except Exception:
+        pass
+
     return True, "Application rejected."

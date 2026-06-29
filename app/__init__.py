@@ -1,6 +1,6 @@
 import os
 from flask import Flask
-from .extensions import db, login_manager, csrf
+from .extensions import db, login_manager, csrf, mail
 from config import config
 
 
@@ -13,6 +13,7 @@ def create_app(config_name: str = "default") -> Flask:
     db.init_app(app)
     login_manager.init_app(app)
     csrf.init_app(app)
+    mail.init_app(app)
 
     from .auth import auth as auth_bp
     from .student import student as student_bp
@@ -35,12 +36,10 @@ def create_app(config_name: str = "default") -> Flask:
 
 
 def _migrate_schema() -> None:
-    """Add columns that didn't exist in earlier schema versions."""
     from sqlalchemy import text
     from .extensions import db
 
     migrations = [
-        # applications table
         "ALTER TABLE applications ADD COLUMN star_rating INTEGER",
         "ALTER TABLE applications ADD COLUMN personal_statement TEXT",
         "ALTER TABLE applications ADD COLUMN financial_need TEXT",
@@ -48,11 +47,13 @@ def _migrate_schema() -> None:
         "ALTER TABLE applications ADD COLUMN rejection_reason TEXT",
         "ALTER TABLE applications ADD COLUMN reviewer_notes TEXT",
         "ALTER TABLE applications ADD COLUMN date_reviewed TIMESTAMP",
-        # scholarships table
         "ALTER TABLE scholarships ADD COLUMN effort_level VARCHAR(16) DEFAULT 'essay'",
-        # awards table
         "ALTER TABLE awards ADD COLUMN recipient_account VARCHAR(512)",
         "ALTER TABLE awards ADD COLUMN disbursement_proof TEXT",
+        "ALTER TABLE awards ADD COLUMN student_accepted BOOLEAN DEFAULT FALSE",
+        "ALTER TABLE awards ADD COLUMN student_payment_info TEXT",
+        "ALTER TABLE awards ADD COLUMN accepted_at TIMESTAMP",
+        "ALTER TABLE users ADD COLUMN is_active BOOLEAN DEFAULT TRUE",
     ]
 
     for sql in migrations:

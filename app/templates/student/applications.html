@@ -66,18 +66,23 @@
     <!-- Final status badge + action -->
     <div class="app-row-status">
       <span class="badge badge-{{ app.status }}">{{ app.status_label }}</span>
-      {% if app.status == 'pending' %}
+      {% if app.needs_acceptance %}
+        <a href="{{ url_for('student.award_accept', award_id=app.award.id) }}" class="btn btn-success btn-sm">
+          Accept Award →
+        </a>
+      {% elif app.status == 'pending' %}
       <form method="POST" action="{{ url_for('student.withdraw', app_id=app.id) }}" style="display:inline;">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button type="submit" class="btn btn-secondary btn-sm"
           data-confirm="Withdraw this application? This cannot be undone.">Withdraw</button>
       </form>
-      {% endif %}
-      {% if app.status == 'approved' and app.award %}
+      {% elif app.status == 'approved' and app.award %}
         {% if app.award.payment_status == 'completed' %}
           <span class="text-sm td-muted">Payment confirmed</span>
-        {% else %}
-          <span class="text-sm td-muted">Disbursement in progress</span>
+        {% elif app.award.payment_status == 'processing' %}
+          <span class="text-sm td-muted">Transfer in progress</span>
+        {% elif app.award.student_accepted %}
+          <span class="text-sm td-muted">Awaiting donor transfer</span>
         {% endif %}
       {% endif %}
     </div>

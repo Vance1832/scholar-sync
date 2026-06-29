@@ -215,3 +215,29 @@ def delete_user(user_id):
     db.session.commit()
     flash("User deleted.", "info")
     return redirect(url_for("admin.students"))
+
+
+@admin.route("/users/<int:user_id>/toggle", methods=["POST"])
+@login_required
+@admin_required
+def toggle_user(user_id):
+    if current_user.id == user_id:
+        flash("You cannot deactivate your own account.", "danger")
+        return redirect(request.referrer or url_for("admin.students"))
+    user = User.query.get_or_404(user_id)
+    user.is_active = not getattr(user, "is_active", True)
+    db.session.commit()
+    status = "activated" if user.is_active else "suspended"
+    from ..services.audit import log
+    log("user_toggled", "user", user.id, f"User {user.username} {status} by admin")
+    flash(f"User {user.username} {status}.", "success")
+    return redirect(request.referrer or url_for("admin.students"))
+
+
+@admin.route("/audit")
+@login_required
+@admin_required
+def audit_log():
+    from ..models.audit_log import AuditLog
+    entries = AuditLog.query.order_by(AuditLog.created_at.desc()).limit(200).all()
+    return render_template("admin/audit_log.html", entries=entries, format_date=format_date)

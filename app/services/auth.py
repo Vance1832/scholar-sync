@@ -44,9 +44,10 @@ def register_user(username: str, password: str, confirm: str, role: str) -> tupl
 
 
 def authenticate(username: str, password: str, role: str):
-    """Return User if credentials are valid for the given role, else None."""
     user = User.query.filter_by(username=username.strip(), role=role).first()
     if user and user.check_password(password):
+        if not getattr(user, "is_active", True):
+            return "suspended"
         return user
     return None
 

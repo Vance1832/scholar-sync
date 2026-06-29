@@ -38,8 +38,15 @@ class Application(db.Model):
 
     @property
     def status_step(self) -> int:
-        """1-4 pipeline step for the visual tracker shown to students."""
         return {"pending": 2, "shortlisted": 3, "approved": 4, "rejected": 4, "withdrawn": 1}.get(self.status, 1)
+
+    @property
+    def needs_acceptance(self) -> bool:
+        return (
+            self.status == "approved"
+            and self.award is not None
+            and self.award.payment_status == "pending_acceptance"
+        )
 
     def __repr__(self) -> str:
         return f"<Application {self.id} [{self.status}]>"

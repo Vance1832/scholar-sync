@@ -13,28 +13,19 @@
 
 {# ── Progress tracker ── #}
 <div style="display:flex; align-items:center; gap:0; margin-bottom:28px;">
-  {% set step = 1 if award.payment_status == 'pending' else (2 if award.payment_status == 'processing' else 3) %}
+  {% set step = 1 if award.payment_status == 'pending_acceptance' else (2 if award.payment_status == 'pending' else (3 if award.payment_status == 'processing' else 4)) %}
 
-  <div style="display:flex; align-items:center; gap:8px; flex:1;">
-    <div style="width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:700;
-      background:{% if step >= 1 %}var(--color-primary){% else %}var(--color-border){% endif %};
-      color:{% if step >= 1 %}#fff{% else %}var(--color-text-muted){% endif %};">1</div>
-    <span style="font-size:0.8125rem; font-weight:{% if step == 1 %}600{% else %}400{% endif %}; color:{% if step >= 1 %}var(--color-text){% else %}var(--color-text-muted){% endif %};">Approved</span>
+  {% for n, label in [(1,'Awaiting Acceptance'),(2,'Student Accepted'),(3,'Transfer Initiated'),(4,'Confirmed')] %}
+  <div style="display:flex; align-items:center; gap:6px; flex:1; min-width:0;">
+    <div style="width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:700; flex-shrink:0;
+      background:{% if step > n %}var(--color-primary){% elif step == n %}var(--color-primary){% else %}var(--color-border){% endif %};
+      color:{% if step >= n %}#fff{% else %}var(--color-text-muted){% endif %};">{{ n }}</div>
+    <span style="font-size:0.75rem; font-weight:{% if step == n %}600{% else %}400{% endif %}; color:{% if step >= n %}var(--color-text){% else %}var(--color-text-muted){% endif %}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ label }}</span>
   </div>
-  <div style="flex:1; height:2px; background:{% if step >= 2 %}var(--color-primary){% else %}var(--color-border){% endif %}; margin:0 8px;"></div>
-  <div style="display:flex; align-items:center; gap:8px; flex:1;">
-    <div style="width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:700;
-      background:{% if step >= 2 %}var(--color-primary){% else %}var(--color-border){% endif %};
-      color:{% if step >= 2 %}#fff{% else %}var(--color-text-muted){% endif %};">2</div>
-    <span style="font-size:0.8125rem; font-weight:{% if step == 2 %}600{% else %}400{% endif %}; color:{% if step >= 2 %}var(--color-text){% else %}var(--color-text-muted){% endif %};">Initiate Transfer</span>
-  </div>
-  <div style="flex:1; height:2px; background:{% if step >= 3 %}var(--color-primary){% else %}var(--color-border){% endif %}; margin:0 8px;"></div>
-  <div style="display:flex; align-items:center; gap:8px; flex:1;">
-    <div style="width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:700;
-      background:{% if step >= 3 %}var(--color-success){% else %}var(--color-border){% endif %};
-      color:{% if step >= 3 %}#fff{% else %}var(--color-text-muted){% endif %};">3</div>
-    <span style="font-size:0.8125rem; font-weight:{% if step == 3 %}600{% else %}400{% endif %}; color:{% if step >= 3 %}var(--color-text){% else %}var(--color-text-muted){% endif %};">Confirmed</span>
-  </div>
+  {% if not loop.last %}
+  <div style="flex:0 0 16px; height:2px; background:{% if step > n %}var(--color-primary){% else %}var(--color-border){% endif %}; margin:0 4px;"></div>
+  {% endif %}
+  {% endfor %}
 </div>
 
 <div class="two-col" style="align-items:start;">
@@ -107,8 +98,28 @@
   {# ── Right: action panel ── #}
   <div>
 
-    {% if award.payment_status == 'pending' %}
-    {# ── Step 2: Initiate disbursement ── #}
+    {% if award.payment_status == 'pending_acceptance' %}
+    <div class="form-section">
+      <div class="form-section-title">Step 1 — Awaiting Student Acceptance</div>
+      <div style="padding:16px; background:var(--color-warning-light); border:1px solid #fde68a; border-radius:var(--radius); font-size:0.8125rem; color:#92400e; line-height:1.6;">
+        The student has been notified by email and must accept the award before you can initiate the transfer. This ensures their payment details are on record.
+      </div>
+      {% if award.student.email %}
+      <p class="text-sm td-muted" style="margin-top:12px;">Notification sent to: {{ award.student.email }}</p>
+      {% endif %}
+    </div>
+
+    {% elif award.payment_status == 'pending' %}
+    {# ── Step 2: student accepted, show their payment info ── #}
+    {% if award.student_payment_info %}
+    <div class="form-section" style="margin-bottom:20px;">
+      <div class="form-section-title">Student Payment Details</div>
+      <div style="background:var(--color-bg); border:1px solid var(--color-border); border-radius:var(--radius); padding:12px 14px; font-size:0.875rem; white-space:pre-wrap; line-height:1.6;">{{ award.student_payment_info }}</div>
+      <p class="form-hint" style="margin-top:6px;">Provided by the student when they accepted the award. Use this to complete the transfer.</p>
+    </div>
+    {% endif %}
+
+    {# ── Step 3: Initiate disbursement ── #}
     <div class="form-section">
       <div class="form-section-title">Step 2 — Initiate Transfer</div>
       <p style="margin:0 0 16px; font-size:0.8125rem; color:var(--color-text-muted);">

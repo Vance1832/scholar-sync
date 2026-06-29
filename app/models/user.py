@@ -10,6 +10,7 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(64), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(256), nullable=False)
     role = db.Column(db.String(16), nullable=False)  # student | donor | admin
+    is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=db.func.now())
 
     student_profile = db.relationship("Student", back_populates="user", uselist=False)

@@ -35,11 +35,14 @@ def login():
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "")
         user = authenticate(username, password, role)
-        if user:
+        if user == "suspended":
+            flash("Your account has been suspended. Contact support.", "danger")
+        elif user:
             login_user(user, remember=request.form.get("remember") == "on")
             next_page = request.args.get("next")
             return redirect(next_page or url_for(f"{role}.dashboard"))
-        flash("Invalid username or password.", "danger")
+        else:
+            flash("Invalid username or password.", "danger")
 
     return render_template("auth/login.html", role=role)
 

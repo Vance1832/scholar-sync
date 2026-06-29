@@ -6,6 +6,8 @@ from . import student
 from ..models.application import Application
 from ..models.scholarship import Scholarship
 from ..services.application import submit_application, withdraw_application
+from ..services.award import accept_award
+from ..models.award import Award
 from ..services.eligibility import eligibility_summary
 from ..utils.helpers import MAJORS, ACADEMIC_YEARS, format_currency, format_date
 
@@ -277,6 +279,31 @@ def withdraw(app_id):
     ok, msg = withdraw_application(application, profile)
     flash(msg, "success" if ok else "danger")
     return redirect(url_for("student.applications"))
+
+
+@student.route("/awards/<int:award_id>/accept", methods=["GET", "POST"])
+@login_required
+@student_required
+def award_accept(award_id):
+    award = Award.query.get_or_404(award_id)
+    profile = current_user.student_profile
+    if award.application.student_id != profile.id:
+        abort(403)
+
+    if request.method == "POST":
+        ok, msg = accept_award(
+            award=award,
+            student_payment_info=request.form.get("student_payment_info", ""),
+        )
+        flash(msg, "success" if ok else "danger")
+        if ok:
+            return redirect(url_for("student.applications"))
+
+    return render_template(
+        "student/award_accept.html",
+        award=award,
+        format_currency=format_currency,
+    )
 
 
 @student.route("/settings", methods=["GET", "POST"])

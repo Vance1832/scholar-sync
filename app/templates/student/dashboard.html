@@ -12,6 +12,17 @@
 
 {% block content %}
 
+{% set pending_awards = recent_applications | selectattr('needs_acceptance') | list %}
+{% if pending_awards %}
+<div class="eligible-banner" style="background:#15803d; margin-bottom:16px;">
+  <div>
+    <div class="eligible-banner-amount" style="font-size:1rem;">Action Required</div>
+    <div class="eligible-banner-label">You have {{ pending_awards|length }} award{{ 's' if pending_awards|length != 1 }} waiting for your acceptance</div>
+  </div>
+  <a href="{{ url_for('student.applications') }}" class="btn btn-sm" style="background:#fff; color:#15803d; margin-left:auto; flex-shrink:0; font-weight:600;">View &amp; Accept →</a>
+</div>
+{% endif %}
+
 {% if stats.total_eligible > 0 %}
 <div class="eligible-banner">
   <div class="eligible-banner-amount">{{ format_currency(stats.total_eligible) }}</div>
