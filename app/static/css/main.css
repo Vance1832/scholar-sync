@@ -391,7 +391,7 @@ a:hover { text-decoration: underline; }
 .auth-split {
   min-height: 100dvh;
   display: grid;
-  grid-template-columns: 420px 1fr;
+  grid-template-columns: 45% 1fr;
 }
 
 .auth-panel-left {
@@ -564,11 +564,11 @@ a:hover { text-decoration: underline; }
 .welcome-layout {
   min-height: 100dvh;
   display: grid;
-  grid-template-columns: 380px 1fr;
+  grid-template-columns: 45% 1fr;
 }
 
 .welcome-left {
-  background: var(--color-sidebar);
+  background: var(--color-sidebar) url('/static/img/login-scholar.jpeg') center 28% / cover no-repeat;
   display: flex;
   flex-direction: column;
   padding: 48px 44px;
@@ -580,20 +580,17 @@ a:hover { text-decoration: underline; }
   content: "";
   position: absolute;
   inset: 0;
-  background-image:
-    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
-  background-size: 40px 40px;
+  background: linear-gradient(
+    160deg,
+    rgba(10, 18, 16, 0.72) 0%,
+    rgba(13, 148, 136, 0.35) 55%,
+    rgba(10, 18, 16, 0.58) 100%
+  );
   pointer-events: none;
 }
 
 .welcome-left::after {
-  content: '';
-  position: absolute;
-  bottom: -60px; left: -60px;
-  width: 300px; height: 300px;
-  background: radial-gradient(circle, rgba(13, 148, 136, 0.16) 0%, transparent 70%);
-  pointer-events: none;
+  display: none;
 }
 
 .welcome-left-content { position: relative; z-index: 1; flex: 1; display: flex; flex-direction: column; }
@@ -647,10 +644,10 @@ a:hover { text-decoration: underline; }
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 48px 60px;
+  padding: 48px 40px;
 }
 
-.welcome-content { width: 100%; max-width: 560px; }
+.welcome-content { width: 100%; max-width: 100%; }
 
 .welcome-heading {
   font-size: 1.25rem;
