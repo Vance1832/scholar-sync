@@ -438,12 +438,11 @@ a:hover { text-decoration: underline; }
   position: absolute;
   inset: 0;
   background: linear-gradient(
-    160deg,
-    rgba(10, 18, 16, 0.72) 0%,
-    rgba(13, 148, 136, 0.38) 60%,
-    rgba(10, 18, 16, 0.55) 100%
+    to bottom,
+    rgba(0, 0, 0, 0.52) 0%,
+    rgba(0, 0, 0, 0.22) 45%,
+    rgba(0, 0, 0, 0.60) 100%
   );
-  backdrop-filter: blur(1px);
 }
 
 .auth-panel-left-content {
@@ -581,10 +580,10 @@ a:hover { text-decoration: underline; }
   position: absolute;
   inset: 0;
   background: linear-gradient(
-    160deg,
-    rgba(10, 18, 16, 0.72) 0%,
-    rgba(13, 148, 136, 0.35) 55%,
-    rgba(10, 18, 16, 0.58) 100%
+    to bottom,
+    rgba(0, 0, 0, 0.52) 0%,
+    rgba(0, 0, 0, 0.22) 45%,
+    rgba(0, 0, 0, 0.62) 100%
   );
   pointer-events: none;
 }
@@ -784,52 +783,61 @@ a:hover { text-decoration: underline; }
 .stat-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 1px;
+  gap: 14px;
   margin-bottom: 28px;
-  background: var(--color-border);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  box-shadow: var(--shadow-sm);
 }
 
 .stat-card {
   background: var(--color-surface);
-  padding: 24px 24px 20px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 22px 24px 20px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 0;
   position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition), transform var(--transition);
 }
 
-.stat-card:first-child::before {
+.stat-card:hover {
+  box-shadow: var(--shadow);
+  transform: translateY(-1px);
+}
+
+.stat-card::after {
   content: '';
   position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, var(--color-primary), rgba(13, 148, 136, 0));
+  bottom: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--color-primary);
+  opacity: 0.18;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
 }
 
 .stat-label {
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   font-weight: 600;
   color: var(--color-text-muted);
-  letter-spacing: 0.07em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
+  margin-bottom: 10px;
 }
 
 .stat-value {
-  font-size: 2rem;
+  font-size: 2.5rem;
   font-weight: 700;
   color: var(--color-text);
   line-height: 1;
-  letter-spacing: -1.5px;
+  letter-spacing: -2px;
   font-variant-numeric: tabular-nums;
 }
 
 .stat-sub {
   font-size: 0.75rem;
   color: var(--color-text-muted);
+  margin-top: 6px;
 }
 
 /* ── Tables ──────────────────────────────────────────────── */
@@ -1326,38 +1334,58 @@ textarea { resize: vertical; min-height: 100px; }
 
 .scholarship-card {
   background: var(--color-surface);
-  border: 1.5px solid var(--color-border);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition);
+  overflow: hidden;
+  transition: box-shadow var(--transition), transform var(--transition);
+  box-shadow: var(--shadow-sm);
 }
 
 .scholarship-card:hover {
-  border-color: var(--color-primary);
-  box-shadow: 0 4px 20px rgba(13, 148, 136, 0.1);
-  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.10);
+  transform: translateY(-3px);
 }
 
-.scholarship-card-applied { opacity: 0.72; }
+.scholarship-card-applied { opacity: 0.65; }
 
+/* Amount hero strip at top of card */
 .scholarship-card-top {
+  background: #111210;
+  padding: 18px 20px 14px;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 8px;
-  margin-bottom: 4px;
+  position: relative;
+  overflow: hidden;
+}
+
+.scholarship-card-top::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--color-primary);
 }
 
 .scholarship-amount {
-  font-size: 1.625rem;
+  font-size: 1.875rem;
   font-weight: 700;
-  color: var(--color-text);
-  letter-spacing: -1.5px;
+  color: #ffffff;
+  letter-spacing: -2px;
   line-height: 1;
   font-variant-numeric: tabular-nums;
+}
+
+/* Card body */
+.scholarship-card-body {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
 }
 
 .scholarship-card-title {
@@ -1369,18 +1397,20 @@ textarea { resize: vertical; min-height: 100px; }
 }
 
 .scholarship-card-donor {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: var(--color-text-muted);
+  font-weight: 500;
 }
 
 .scholarship-card-desc {
   font-size: 0.8125rem;
   color: var(--color-text-muted);
   line-height: 1.6;
+  margin-top: 2px;
 }
 
 .scholarship-card-meta {
-  font-size: 0.75rem;
+  font-size: 0.74rem;
   color: var(--color-text-light);
   margin-top: 4px;
 }
@@ -1390,9 +1420,9 @@ textarea { resize: vertical; min-height: 100px; }
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  margin-top: auto;
-  padding-top: 12px;
+  padding: 12px 20px;
   border-top: 1px solid var(--color-border);
+  background: var(--color-neutral-light);
 }
 
 .deadline-label { font-size: 0.75rem; color: var(--color-text-muted); }
@@ -1401,17 +1431,17 @@ textarea { resize: vertical; min-height: 100px; }
 
 /* Effort tags */
 .effort-tag {
-  font-size: 0.68rem;
-  font-weight: 600;
-  padding: 2px 7px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 3px 8px;
   border-radius: 4px;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
 }
 
-.effort-easy     { background: #dcfce7; color: #15803d; }
-.effort-essay    { background: #f0fdfa; color: #0f766e; }
-.effort-detailed { background: #faf5ff; color: #7c3aed; }
+.effort-easy     { background: rgba(22,163,74,0.15); color: #15803d; }
+.effort-essay    { background: rgba(13,148,136,0.15); color: #0f766e; }
+.effort-detailed { background: rgba(124,58,237,0.12); color: #6d28d9; }
 
 /* ── Application pipeline (student) ─────────────────────── */
 

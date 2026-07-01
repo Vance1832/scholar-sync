@@ -45,19 +45,21 @@
       </div>
     </div>
 
-    <div class="scholarship-card-title">{{ sch.title }}</div>
-    <div class="scholarship-card-donor">by {{ sch.donor.display_name }}</div>
+    <div class="scholarship-card-body">
+      <div class="scholarship-card-title">{{ sch.title }}</div>
+      <div class="scholarship-card-donor">by {{ sch.donor.display_name }}</div>
 
-    {% if sch.description %}
-    <div class="scholarship-card-desc">{{ sch.description[:120] }}{% if sch.description|length > 120 %}…{% endif %}</div>
-    {% endif %}
-
-    <div class="scholarship-card-meta">
-      {% if sch.criteria %}
-        <span>{{ sch.criteria.as_display_string() }}</span>
-      {% else %}
-        <span>Open to all students</span>
+      {% if sch.description %}
+      <div class="scholarship-card-desc">{{ sch.description[:120] }}{% if sch.description|length > 120 %}…{% endif %}</div>
       {% endif %}
+
+      <div class="scholarship-card-meta">
+        {% if sch.criteria %}
+          <span>{{ sch.criteria.as_display_string() }}</span>
+        {% else %}
+          <span>Open to all students</span>
+        {% endif %}
+      </div>
     </div>
 
     <div class="scholarship-card-footer">
