@@ -15,11 +15,13 @@ def create_app(config_name: str = "default") -> Flask:
     csrf.init_app(app)
     mail.init_app(app)
 
+    from .main import main as main_bp
     from .auth import auth as auth_bp
     from .student import student as student_bp
     from .donor import donor as donor_bp
     from .admin import admin as admin_bp
 
+    app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(student_bp, url_prefix="/student")
     app.register_blueprint(donor_bp, url_prefix="/donor")
@@ -31,8 +33,17 @@ def create_app(config_name: str = "default") -> Flask:
         _seed_admin()
 
     _register_error_handlers(app)
+    _register_cli(app)
 
     return app
+
+
+def _register_cli(app: Flask) -> None:
+    @app.cli.command("seed-demo")
+    def seed_demo_command():
+        """Populate the database with realistic demo data for portfolio demos."""
+        from .seed_demo import seed_demo
+        seed_demo()
 
 
 def _migrate_schema() -> None:

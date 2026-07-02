@@ -1,0 +1,97 @@
+{% extends "public/base_public.html" %}
+
+{% block title %}Browse Scholarships{% endblock %}
+
+{% block content %}
+<section class="pub-page-head">
+  <div class="pub-container">
+    <h1 class="pub-page-title">Browse scholarships</h1>
+    <p class="pub-page-sub">{{ scholarships|length }} open scholarship{{ 's' if scholarships|length != 1 }} — no account needed to look around.</p>
+  </div>
+</section>
+
+<section class="pub-section pub-section-tight">
+  <div class="pub-container">
+
+    <form method="GET" class="filter-bar" action="{{ url_for('main.scholarships') }}">
+      <div class="filter-search">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+        </svg>
+        <input type="text" name="q" value="{{ q }}" placeholder="Search by keyword…">
+      </div>
+
+      <select name="category" aria-label="Category">
+        <option value="">All categories</option>
+        {% for cat in categories %}
+        <option value="{{ cat }}" {{ 'selected' if category == cat }}>{{ cat }}</option>
+        {% endfor %}
+      </select>
+
+      <select name="effort" aria-label="Application effort">
+        <option value="">Any effort</option>
+        <option value="easy" {{ 'selected' if effort == 'easy' }}>Quick apply</option>
+        <option value="essay" {{ 'selected' if effort == 'essay' }}>Essay required</option>
+        <option value="detailed" {{ 'selected' if effort == 'detailed' }}>Detailed</option>
+      </select>
+
+      <select name="min_amount" aria-label="Minimum amount">
+        <option value="">Any amount</option>
+        <option value="1000" {{ 'selected' if min_amount == 1000 }}>$1,000+</option>
+        <option value="2500" {{ 'selected' if min_amount == 2500 }}>$2,500+</option>
+        <option value="5000" {{ 'selected' if min_amount == 5000 }}>$5,000+</option>
+        <option value="10000" {{ 'selected' if min_amount == 10000 }}>$10,000+</option>
+      </select>
+
+      <select name="sort" aria-label="Sort by">
+        <option value="deadline" {{ 'selected' if sort == 'deadline' }}>Deadline soonest</option>
+        <option value="amount" {{ 'selected' if sort == 'amount' }}>Highest amount</option>
+        <option value="newest" {{ 'selected' if sort == 'newest' }}>Newest</option>
+      </select>
+
+      <button type="submit" class="btn btn-primary">Filter</button>
+      {% if q or category or effort or min_amount %}
+      <a href="{{ url_for('main.scholarships') }}" class="btn btn-secondary">Clear</a>
+      {% endif %}
+    </form>
+
+    {% if scholarships %}
+    <div class="pub-card-grid">
+      {% for sch in scholarships %}
+      <a href="{{ url_for('main.scholarship_detail', scholarship_id=sch.id) }}" class="pub-sch-card">
+        <div class="pub-sch-card-top">
+          <span class="pub-sch-amount">{{ format_currency(sch.amount).split('.')[0] }}</span>
+          <span class="d-flex gap-8 align-center">
+            {% if sch.effort_level == 'easy' %}<span class="effort-tag effort-easy">Quick Apply</span>{% endif %}
+            {% if sch.category %}<span class="pub-chip pub-chip-sm">{{ sch.category }}</span>{% endif %}
+          </span>
+        </div>
+        <div class="pub-sch-title">{{ sch.title }}</div>
+        <div class="pub-sch-donor">by {{ sch.donor.display_name }}</div>
+        {% if sch.description %}
+        <div class="pub-sch-desc">{{ sch.description[:110] }}{% if sch.description|length > 110 %}…{% endif %}</div>
+        {% endif %}
+        <div class="pub-sch-foot">
+          {% if sch.deadline %}
+            {% set delta = (sch.deadline - today).days %}
+            <span class="deadline-label {% if delta <= 7 %}deadline-urgent{% elif delta <= 14 %}deadline-soon{% endif %}">
+              Due {{ format_date(sch.deadline) }}{% if delta <= 7 %} · {{ delta }}d left{% endif %}
+            </span>
+          {% else %}
+            <span class="deadline-label">No deadline</span>
+          {% endif %}
+          <span class="pub-sch-cta">View →</span>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="pub-empty">
+      <div class="empty-title">No scholarships match those filters</div>
+      <div class="empty-desc">Try broadening your search or <a href="{{ url_for('main.scholarships') }}">clear all filters</a>.</div>
+    </div>
+    {% endif %}
+
+  </div>
+</section>
+{% endblock %}

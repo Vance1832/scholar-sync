@@ -11,7 +11,8 @@
 <div class="auth-split">
 
   <!-- Left brand panel -->
-  <div class="auth-panel-left">
+  <div class="auth-panel-left auth-panel-photo" style="background: url({{ url_for('static', filename='img/students-group.jpg') }}) center/cover no-repeat;">
+    <div class="auth-panel-photo-overlay"></div>
     <div class="auth-panel-left-content">
       <div class="auth-panel-brand">
         <div class="auth-panel-brand-icon">
@@ -38,11 +39,11 @@
   <div class="auth-panel-right">
     <div class="auth-form-wrap">
 
-      <a href="{{ url_for('auth.welcome') }}" class="auth-back-link">
+      <a href="{{ url_for('main.index') }}" class="auth-back-link">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:14px;height:14px;">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
         </svg>
-        Back
+        Back to home
       </a>
 
       {% with messages = get_flashed_messages(with_categories=true) %}
@@ -57,6 +58,11 @@
 
       <div class="auth-form-heading">Create account</div>
       <div class="auth-form-sub">Fill in the details below to get started.</div>
+
+      <div class="auth-role-tabs" role="tablist" aria-label="Account type">
+        <a href="{{ url_for('auth.register', role='student') }}" class="auth-role-tab {{ 'active' if role == 'student' }}">Student</a>
+        <a href="{{ url_for('auth.register', role='donor') }}" class="auth-role-tab {{ 'active' if role == 'donor' }}">Donor</a>
+      </div>
 
       <form method="POST" action="{{ url_for('auth.register', role=role) }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

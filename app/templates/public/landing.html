@@ -1,0 +1,263 @@
+{% extends "public/base_public.html" %}
+
+{% block title %}Scholarships that find you{% endblock %}
+
+{% block content %}
+
+{# ── Hero ── #}
+<section class="pub-hero">
+  <div class="pub-container pub-hero-grid">
+    <div class="pub-hero-inner">
+      <div class="pub-hero-badge">
+        <span class="pub-hero-badge-dot"></span>
+        {{ stats.open_count }} scholarship{{ 's' if stats.open_count != 1 }} open right now
+      </div>
+
+      <h1 class="pub-hero-title">Fund your future,<br><span class="pub-hero-accent">without the guesswork.</span></h1>
+
+      <p class="pub-hero-sub">
+        ScholarSync matches students with scholarships they actually qualify for,
+        and gives donors full visibility from application to award.
+      </p>
+
+      <form action="{{ url_for('main.scholarships') }}" method="GET" class="pub-hero-search" role="search">
+        <svg class="pub-hero-search-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+        </svg>
+        <input type="text" name="q" placeholder="Search — e.g. STEM, nursing…" aria-label="Search scholarships">
+        <button type="submit" class="btn btn-primary pub-hero-search-btn">Search</button>
+      </form>
+
+      <div class="pub-hero-chips">
+        {% for cat in categories[:5] %}
+        <a href="{{ url_for('main.scholarships', category=cat) }}" class="pub-chip">{{ cat }}</a>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="pub-hero-visual">
+      <img src="{{ url_for('static', filename='img/hero-students.jpg') }}"
+           alt="Students laughing together while studying in a library" class="pub-hero-img">
+      <div class="pub-hero-float pub-hero-float-award">
+        <span class="pub-hero-float-icon">🎓</span>
+        <div>
+          <div class="pub-hero-float-title">{{ format_currency(stats.total_awarded).split('.')[0] }} awarded</div>
+          <div class="pub-hero-float-sub">and counting</div>
+        </div>
+      </div>
+      <div class="pub-hero-float pub-hero-float-match">
+        <span class="match-badge match-high">100% match</span>
+        <div class="pub-hero-float-sub">Hartwell STEM Excellence</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{# ── Stats band ── #}
+<section class="pub-stats">
+  <div class="pub-container pub-stats-grid">
+    <div class="pub-stat">
+      <div class="pub-stat-value">{{ format_currency(stats.total_available).split('.')[0] }}</div>
+      <div class="pub-stat-label">Available in open scholarships</div>
+    </div>
+    <div class="pub-stat">
+      <div class="pub-stat-value">{{ stats.open_count }}</div>
+      <div class="pub-stat-label">Scholarships accepting applications</div>
+    </div>
+    <div class="pub-stat">
+      <div class="pub-stat-value">{{ format_currency(stats.total_awarded).split('.')[0] }}</div>
+      <div class="pub-stat-label">Awarded to students so far</div>
+    </div>
+    <div class="pub-stat">
+      <div class="pub-stat-value">{{ stats.students + stats.donors }}</div>
+      <div class="pub-stat-label">Students &amp; donors on the platform</div>
+    </div>
+  </div>
+</section>
+
+{# ── Featured scholarships ── #}
+{% if featured %}
+<section class="pub-section">
+  <div class="pub-container">
+    <div class="pub-section-head">
+      <div>
+        <h2 class="pub-section-title">Featured scholarships</h2>
+        <p class="pub-section-sub">The largest awards currently accepting applications.</p>
+      </div>
+      <a href="{{ url_for('main.scholarships') }}" class="btn btn-secondary">View all</a>
+    </div>
+
+    <div class="pub-card-grid">
+      {% for sch in featured %}
+      <a href="{{ url_for('main.scholarship_detail', scholarship_id=sch.id) }}" class="pub-sch-card">
+        <div class="pub-sch-card-top">
+          <span class="pub-sch-amount">{{ format_currency(sch.amount).split('.')[0] }}</span>
+          {% if sch.category %}<span class="pub-chip pub-chip-sm">{{ sch.category }}</span>{% endif %}
+        </div>
+        <div class="pub-sch-title">{{ sch.title }}</div>
+        <div class="pub-sch-donor">by {{ sch.donor.display_name }}</div>
+        <div class="pub-sch-foot">
+          {% if sch.deadline %}
+            {% set delta = (sch.deadline - today).days %}
+            <span class="deadline-label {% if delta <= 7 %}deadline-urgent{% elif delta <= 14 %}deadline-soon{% endif %}">
+              Due {{ format_date(sch.deadline) }}
+            </span>
+          {% else %}
+            <span class="deadline-label">No deadline</span>
+          {% endif %}
+          <span class="pub-sch-cta">View →</span>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{# ── How it works ── #}
+<section class="pub-section pub-section-alt" id="how-it-works">
+  <div class="pub-container">
+    <div class="pub-section-head pub-section-head-center">
+      <h2 class="pub-section-title">How it works</h2>
+      <p class="pub-section-sub">From profile to payout in four transparent steps.</p>
+    </div>
+
+    <div class="pub-steps">
+      <div class="pub-step">
+        <div class="pub-step-num">1</div>
+        <div class="pub-step-title">Build your profile</div>
+        <div class="pub-step-desc">Add your GPA, major, and academic year once — we use it to check eligibility everywhere.</div>
+      </div>
+      <div class="pub-step">
+        <div class="pub-step-num">2</div>
+        <div class="pub-step-title">See your matches</div>
+        <div class="pub-step-desc">Every scholarship shows a match score, so you never waste an essay on one you can't win.</div>
+      </div>
+      <div class="pub-step">
+        <div class="pub-step-num">3</div>
+        <div class="pub-step-title">Apply &amp; track</div>
+        <div class="pub-step-desc">Submit structured applications and follow their status — under review, shortlisted, awarded.</div>
+      </div>
+      <div class="pub-step">
+        <div class="pub-step-num">4</div>
+        <div class="pub-step-title">Accept your award</div>
+        <div class="pub-step-desc">Winners accept awards in-app and donors disburse with a verifiable payment trail.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{# ── For donors ── #}
+<section class="pub-section" id="for-donors">
+  <div class="pub-container pub-split">
+    <div class="pub-split-text">
+      <div class="pub-eyebrow">For donors</div>
+      <h2 class="pub-section-title">Give with confidence,<br>not paperwork.</h2>
+      <p class="pub-section-sub">
+        Create a scholarship in minutes, define eligibility criteria that filter applicants automatically,
+        and review structured applications side by side.
+      </p>
+      <ul class="pub-checklist">
+        <li>Automatic eligibility screening — GPA, major, and need-based criteria</li>
+        <li>Shortlist, rate, and compare applicants in one review queue</li>
+        <li>Full disbursement trail: initiate, confirm, and document every payment</li>
+        <li>Audit log of every action for complete accountability</li>
+      </ul>
+      <a href="{{ url_for('auth.register', role='donor') }}" class="btn btn-primary">Start a scholarship</a>
+    </div>
+
+    <div class="pub-split-visual">
+      <img src="{{ url_for('static', filename='img/students-group.jpg') }}"
+           alt="Students collaborating around a table with laptops" class="pub-split-img">
+      <div class="pub-mock-card pub-mock-card-overlap">
+        <div class="pub-mock-row">
+          <span class="pub-mock-label">Applications received</span>
+          <strong>24</strong>
+        </div>
+        <div class="pub-mock-bar"><span style="width:70%"></span></div>
+        <div class="pub-mock-row">
+          <span class="pub-mock-label">Shortlisted</span>
+          <strong>6</strong>
+        </div>
+        <div class="pub-mock-bar"><span style="width:30%"></span></div>
+        <div class="pub-mock-row">
+          <span class="pub-mock-label">Awarded</span>
+          <strong class="pub-mock-success">2 · $10,000</strong>
+        </div>
+        <div class="pub-mock-bar"><span class="pub-mock-bar-success" style="width:12%"></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{# ── Testimonials ── #}
+<section class="pub-section pub-section-alt">
+  <div class="pub-container">
+    <div class="pub-section-head pub-section-head-center">
+      <h2 class="pub-section-title">Trusted on both sides of the table</h2>
+    </div>
+    <div class="pub-quotes">
+      <figure class="pub-quote">
+        <blockquote>"The match score saved me weeks. I only applied to scholarships I was actually eligible for — and won two."</blockquote>
+        <figcaption>
+          <img src="{{ url_for('static', filename='img/avatar-1.jpg') }}" alt="" class="pub-quote-avatar">
+          <span><strong>Maya T.</strong> · Nursing, Junior</span>
+        </figcaption>
+      </figure>
+      <figure class="pub-quote">
+        <blockquote>"We replaced a spreadsheet-and-email process with ScholarSync. Reviewing applicants side by side is night and day."</blockquote>
+        <figcaption>
+          <img src="{{ url_for('static', filename='img/avatar-3.jpg') }}" alt="" class="pub-quote-avatar">
+          <span><strong>Hartwell Foundation</strong> · Corporate donor</span>
+        </figcaption>
+      </figure>
+      <figure class="pub-quote">
+        <blockquote>"I could see exactly where my application stood at every step. No black box, no wondering."</blockquote>
+        <figcaption>
+          <img src="{{ url_for('static', filename='img/avatar-2.jpg') }}" alt="" class="pub-quote-avatar">
+          <span><strong>Devon R.</strong> · Computer Science, Senior</span>
+        </figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+{# ── FAQ ── #}
+<section class="pub-section" id="faq">
+  <div class="pub-container pub-faq-wrap">
+    <div class="pub-section-head pub-section-head-center">
+      <h2 class="pub-section-title">Frequently asked questions</h2>
+    </div>
+
+    <details class="pub-faq">
+      <summary>Is ScholarSync free for students?</summary>
+      <p>Yes. Students browse, apply, and track applications at no cost. Scholarships are funded entirely by donors.</p>
+    </details>
+    <details class="pub-faq">
+      <summary>How does the match score work?</summary>
+      <p>Your profile (GPA, major) is checked against each scholarship's eligibility criteria. The score shows the percentage of verifiable requirements you meet, so you can prioritize where to spend your time.</p>
+    </details>
+    <details class="pub-faq">
+      <summary>What happens after I'm selected?</summary>
+      <p>You'll be notified in-app, accept the award with your payment details, and the donor disburses the funds with a documented payment trail you can both verify.</p>
+    </details>
+    <details class="pub-faq">
+      <summary>Can organizations run multiple scholarships?</summary>
+      <p>Yes. Donors can run any number of scholarships, each with its own criteria, deadline, award slots, and review pipeline.</p>
+    </details>
+  </div>
+</section>
+
+{# ── CTA band ── #}
+<section class="pub-cta" style="background-image: linear-gradient(rgba(17, 18, 16, 0.82), rgba(17, 18, 16, 0.82)), url('{{ url_for('static', filename='img/login-photo.jpg') }}');">
+  <div class="pub-container pub-cta-inner">
+    <h2 class="pub-cta-title">Your next scholarship is waiting.</h2>
+    <p class="pub-cta-sub">Create a free profile and see your matches in under two minutes.</p>
+    <div class="pub-cta-actions">
+      <a href="{{ url_for('auth.register', role='student') }}" class="btn pub-btn-light">Get started — it's free</a>
+      <a href="{{ url_for('main.scholarships') }}" class="pub-cta-link">Browse scholarships →</a>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,107 @@
+{% extends "public/base_public.html" %}
+
+{% block title %}{{ scholarship.title }}{% endblock %}
+{% block meta_description %}{{ scholarship.title }} — {{ format_currency(scholarship.amount) }} scholarship on ScholarSync.{% endblock %}
+
+{% block content %}
+<section class="pub-page-head">
+  <div class="pub-container">
+    <a href="{{ url_for('main.scholarships') }}" class="pub-back">← All scholarships</a>
+    <div class="pub-detail-head">
+      <div>
+        <h1 class="pub-page-title">{{ scholarship.title }}</h1>
+        <p class="pub-page-sub">by {{ scholarship.donor.display_name }}</p>
+      </div>
+      <div class="pub-detail-amount">{{ format_currency(scholarship.amount).split('.')[0] }}</div>
+    </div>
+  </div>
+</section>
+
+<section class="pub-section pub-section-tight">
+  <div class="pub-container pub-detail-grid">
+
+    <div class="pub-detail-main">
+      <div class="pub-panel">
+        <h2 class="pub-panel-title">About this scholarship</h2>
+        <p class="pub-detail-desc">{{ scholarship.description or "No description provided." }}</p>
+      </div>
+
+      <div class="pub-panel">
+        <h2 class="pub-panel-title">Eligibility requirements</h2>
+        <ul class="pub-checklist">
+          {% if scholarship.criteria %}
+            {% if scholarship.criteria.min_gpa %}<li>Minimum GPA of {{ scholarship.criteria.min_gpa }}</li>{% endif %}
+            {% if scholarship.criteria.required_major and scholarship.criteria.required_major != 'Any Major' %}<li>{{ scholarship.criteria.required_major }} major</li>{% endif %}
+            {% if scholarship.criteria.need_based %}<li>Demonstrated financial need</li>{% endif %}
+            {% if scholarship.criteria.criterion_text %}<li>{{ scholarship.criteria.criterion_text }}</li>{% endif %}
+            {% if not scholarship.criteria.min_gpa and (not scholarship.criteria.required_major or scholarship.criteria.required_major == 'Any Major') and not scholarship.criteria.need_based and not scholarship.criteria.criterion_text %}
+            <li>Open to all students</li>
+            {% endif %}
+          {% else %}
+            <li>Open to all students</li>
+          {% endif %}
+        </ul>
+      </div>
+
+      {% if related %}
+      <div class="pub-panel">
+        <h2 class="pub-panel-title">Similar scholarships</h2>
+        <div class="pub-related">
+          {% for r in related %}
+          <a href="{{ url_for('main.scholarship_detail', scholarship_id=r.id) }}" class="pub-related-item">
+            <span class="pub-related-title">{{ r.title }}</span>
+            <span class="pub-related-amount">{{ format_currency(r.amount).split('.')[0] }}</span>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <aside class="pub-detail-side">
+      <div class="pub-panel pub-apply-panel">
+        <div class="pub-apply-row">
+          <span>Award</span>
+          <strong>{{ format_currency(scholarship.amount).split('.')[0] }}</strong>
+        </div>
+        <div class="pub-apply-row">
+          <span>Deadline</span>
+          <strong>
+            {% if scholarship.deadline %}
+              {{ format_date(scholarship.deadline) }}
+              {% set delta = (scholarship.deadline - today).days %}
+              {% if not deadline_passed and delta <= 14 %}<span class="deadline-urgent"> · {{ delta }}d left</span>{% endif %}
+            {% else %}None{% endif %}
+          </strong>
+        </div>
+        <div class="pub-apply-row">
+          <span>Winners</span>
+          <strong>{{ scholarship.slots or 1 }}</strong>
+        </div>
+        <div class="pub-apply-row">
+          <span>Effort</span>
+          <strong>
+            {% if scholarship.effort_level == 'easy' %}Quick apply
+            {% elif scholarship.effort_level == 'detailed' %}Detailed application
+            {% else %}Essay required{% endif %}
+          </strong>
+        </div>
+        {% if scholarship.category %}
+        <div class="pub-apply-row">
+          <span>Category</span>
+          <strong>{{ scholarship.category }}</strong>
+        </div>
+        {% endif %}
+
+        {% if deadline_passed %}
+          <div class="pub-apply-closed">Applications closed</div>
+        {% else %}
+          <a href="{{ url_for('auth.login', role='student', next=url_for('student.apply', scholarship_id=scholarship.id)) }}" class="btn btn-primary pub-apply-btn">Sign in to apply</a>
+          <p class="pub-apply-note">New here? <a href="{{ url_for('auth.register', role='student') }}">Create a free account</a> to check your match score and apply.</p>
+        {% endif %}
+      </div>
+    </aside>
+
+  </div>
+</section>
+{% endblock %}

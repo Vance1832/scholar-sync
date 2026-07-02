@@ -8,18 +8,10 @@ def _role_dashboard(role):
     return redirect(url_for(f"{role}.dashboard"))
 
 
-@auth.route("/")
-def index():
-    if current_user.is_authenticated:
-        return _role_dashboard(current_user.role)
-    return redirect(url_for("auth.welcome"))
-
-
 @auth.route("/welcome")
 def welcome():
-    if current_user.is_authenticated:
-        return _role_dashboard(current_user.role)
-    return render_template("auth/welcome.html")
+    """Legacy role-picker URL — the public landing page replaced it."""
+    return redirect(url_for("main.index"))
 
 
 @auth.route("/login", methods=["GET", "POST"])
@@ -29,7 +21,7 @@ def login():
 
     role = request.args.get("role", request.form.get("role", ""))
     if role not in ("student", "donor"):
-        return redirect(url_for("auth.welcome"))
+        role = "student"
 
     if request.method == "POST":
         username = request.form.get("username", "").strip()
@@ -39,7 +31,10 @@ def login():
             flash("Your account has been suspended. Contact support.", "danger")
         elif user:
             login_user(user, remember=request.form.get("remember") == "on")
-            next_page = request.args.get("next")
+            next_page = request.args.get("next", "")
+            # Only allow same-site relative redirects
+            if not next_page.startswith("/") or next_page.startswith("//"):
+                next_page = None
             return redirect(next_page or url_for(f"{role}.dashboard"))
         else:
             flash("Invalid username or password.", "danger")
@@ -76,7 +71,7 @@ def register():
 
     role = request.args.get("role", request.form.get("role", ""))
     if role not in ("student", "donor"):
-        return redirect(url_for("auth.welcome"))
+        role = "student"
 
     if request.method == "POST":
         username = request.form.get("username", "")
