@@ -7,3 +7,9 @@ venv/
 .venv/
 *.db
 *.sqlite3
+
+# Local tooling artifacts
+.claude/
+.agents/
+skills-lock.json
+.DS_Store
