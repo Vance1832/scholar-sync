@@ -39,11 +39,31 @@ def create_app(config_name: str = "default") -> Flask:
 
 
 def _register_cli(app: Flask) -> None:
+    import click
+
     @app.cli.command("seed-demo")
     def seed_demo_command():
         """Populate the database with realistic demo data for portfolio demos."""
         from .seed_demo import seed_demo
         seed_demo()
+
+    @app.cli.command("set-admin-password")
+    @click.option("--password", prompt=True, hide_input=True, confirmation_prompt=True)
+    def set_admin_password_command(password):
+        """Reset the admin account password (prompts securely)."""
+        from .models.user import User
+        from .extensions import db
+
+        admin = User.query.filter_by(role="admin").first()
+        if not admin:
+            click.echo("No admin account exists yet — it is seeded on first app start.")
+            return
+        if len(password) < 8:
+            click.echo("Password must be at least 8 characters.")
+            return
+        admin.set_password(password)
+        db.session.commit()
+        click.echo(f"Password updated for admin user '{admin.username}'.")
 
 
 def _migrate_schema() -> None:
@@ -92,11 +112,23 @@ def _register_error_handlers(app: Flask) -> None:
 
 
 def _seed_admin():
+    """Create the initial admin account.
+
+    The password comes from the ADMIN_PASSWORD env var; if unset, a random
+    one is generated and printed to the console once. There is deliberately
+    no hardcoded default — this repo is public.
+    """
+    import secrets
     from .models.user import User
     from .extensions import db
 
     if not User.query.filter_by(role="admin").first():
+        password = os.environ.get("ADMIN_PASSWORD")
+        if not password:
+            password = secrets.token_urlsafe(12)
+            print(f" * Seeded admin account — username 'admin', password: {password}")
+            print(" * (set the ADMIN_PASSWORD env var to choose it yourself)")
         admin = User(username="admin", role="admin")
-        admin.set_password("admin123")
+        admin.set_password(password)
         db.session.add(admin)
         db.session.commit()

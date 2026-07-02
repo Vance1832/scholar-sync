@@ -115,11 +115,15 @@ Without these, the app runs normally and silently skips sending email.
 
 ## Try it out
 
-Student and donor accounts are self-serve — visit the [live app](https://scholar-sync-bext.onrender.com), pick a role on the welcome screen, and register. The admin account is seeded automatically:
+Student and donor accounts are self-serve — visit the [live app](https://scholar-sync-bext.onrender.com) and register, or use the local demo accounts from `flask seed-demo`.
 
-| Role | Username | Password |
-|------|----------|----------|
-| Admin | _(unlisted login at `/admin/login`)_ | `admin` / `admin123` |
+An admin account (`admin`) is seeded automatically on first run. Its password comes from the `ADMIN_PASSWORD` env var; if unset, a random password is generated and printed to the server console once. Rotate it any time with:
+
+```bash
+flask set-admin-password
+```
+
+The admin login lives at an unlisted URL (`/admin/login`) and is not linked anywhere in the public UI.
 
 ## License
 
