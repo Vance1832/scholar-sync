@@ -1785,3 +1785,126 @@ tbody tr:nth-child(n+6) { animation-delay: 150ms; }
 .page-body {
   animation: pageIn 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+/* ── Scholarship filter bar (public + student browse) ────── */
+
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 14px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 24px;
+}
+
+.filter-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 220px;
+  min-width: 180px;
+  padding: 0 12px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+.filter-search:focus-within { border-color: var(--color-primary); }
+.filter-search svg {
+  width: 16px; height: 16px;
+  color: var(--color-text-light);
+  flex-shrink: 0;
+}
+.filter-search input {
+  flex: 1;
+  border: none !important;
+  outline: none;
+  background: transparent;
+  padding: 9px 0;
+  font: inherit;
+  font-size: 0.875rem;
+  min-width: 0;
+  box-shadow: none !important;
+}
+
+.filter-bar select {
+  width: auto;
+  padding: 9px 32px 9px 12px;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+/* ── Match score badge ───────────────────────────────────── */
+
+.match-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.match-badge::before {
+  content: '';
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.match-high { background: var(--color-success-light); color: var(--color-success); }
+.match-mid { background: var(--color-warning-light); color: var(--color-warning); }
+.match-low { background: var(--color-danger-light); color: var(--color-danger); }
+
+/* ── Save (bookmark) button ──────────────────────────────── */
+
+.save-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 32px; height: 32px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: var(--color-surface);
+  color: var(--color-text-light);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.save-btn svg { width: 16px; height: 16px; }
+.save-btn:hover { border-color: var(--color-danger); color: var(--color-danger); }
+.save-btn.saved {
+  border-color: var(--color-danger);
+  background: var(--color-danger-light);
+  color: var(--color-danger);
+}
+.save-btn-form { display: inline-flex; margin: 0; }
+
+/* ── Auth role tabs ──────────────────────────────────────── */
+
+.auth-role-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  margin-bottom: 24px;
+}
+.auth-role-tab {
+  text-align: center;
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  transition: all var(--transition);
+}
+.auth-role-tab:hover { color: var(--color-text); text-decoration: none; }
+.auth-role-tab.active {
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-sm);
+}

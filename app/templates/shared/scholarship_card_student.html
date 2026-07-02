@@ -1,0 +1,82 @@
+{# Expects: item = {scholarship, eligibility, already_applied, application_status, saved}, today #}
+{% set sch = item.scholarship %}
+{% set elig = item.eligibility %}
+
+<div class="scholarship-card {% if item.already_applied %}scholarship-card-applied{% endif %}">
+
+  <div class="scholarship-card-top">
+    <div class="scholarship-amount">{{ format_currency(sch.amount) }}</div>
+    <div class="d-flex gap-8 align-center flex-wrap">
+      {% if sch.effort_level == 'easy' %}
+        <span class="effort-tag effort-easy">Quick Apply</span>
+      {% elif sch.effort_level == 'essay' %}
+        <span class="effort-tag effort-essay">Essay Required</span>
+      {% else %}
+        <span class="effort-tag effort-detailed">Detailed</span>
+      {% endif %}
+
+      {% if elig.match_pct is not none %}
+        <span class="match-badge {% if elig.match_pct >= 100 %}match-high{% elif elig.match_pct >= 50 %}match-mid{% else %}match-low{% endif %}">
+          {{ elig.match_pct }}% match
+        </span>
+      {% else %}
+        <span class="elig-badge elig-unknown">Profile needed</span>
+      {% endif %}
+
+      <form method="POST" action="{{ url_for('student.toggle_save', scholarship_id=sch.id) }}" class="save-btn-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="save-btn {{ 'saved' if item.saved }}" aria-label="{{ 'Unsave' if item.saved else 'Save' }} scholarship" title="{{ 'Remove from saved' if item.saved else 'Save for later' }}">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="{{ 'currentColor' if item.saved else 'none' }}" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+          </svg>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div class="scholarship-card-body">
+    <div class="scholarship-card-title">{{ sch.title }}</div>
+    <div class="scholarship-card-donor">by {{ sch.donor.display_name }}{% if sch.category %} · {{ sch.category }}{% endif %}</div>
+
+    {% if sch.description %}
+    <div class="scholarship-card-desc">{{ sch.description[:120] }}{% if sch.description|length > 120 %}…{% endif %}</div>
+    {% endif %}
+
+    <div class="scholarship-card-meta">
+      {% if sch.criteria %}
+        <span>{{ sch.criteria.as_display_string() }}</span>
+      {% else %}
+        <span>Open to all students</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="scholarship-card-footer">
+    <div class="scholarship-deadline">
+      {% if item.expired or item.inactive %}
+        <span class="deadline-label deadline-urgent">Closed</span>
+      {% elif sch.deadline %}
+        {% set delta = (sch.deadline - today).days if today is defined else 99 %}
+        <span class="deadline-label {% if delta <= 7 %}deadline-urgent{% elif delta <= 14 %}deadline-soon{% endif %}">
+          Due {{ format_date(sch.deadline) }}
+          {% if delta <= 7 %}&nbsp;· {{ delta }}d left{% endif %}
+        </span>
+      {% else %}
+        <span class="deadline-label">No deadline</span>
+      {% endif %}
+    </div>
+
+    {% if item.already_applied %}
+      <span class="badge badge-{{ item.application_status }}">
+        {% if item.application_status == 'pending' %}Under Review
+        {% elif item.application_status == 'shortlisted' %}Shortlisted
+        {% elif item.application_status == 'approved' %}Awarded
+        {% elif item.application_status == 'rejected' %}Not Selected
+        {% else %}{{ item.application_status | title }}{% endif %}
+      </span>
+    {% elif not item.expired and not item.inactive %}
+      <a href="{{ url_for('student.scholarship_detail', scholarship_id=sch.id) }}" class="btn btn-primary btn-sm">Apply</a>
+    {% endif %}
+  </div>
+
+</div>

@@ -9,7 +9,9 @@ from ..services.application import submit_application, withdraw_application
 from ..services.award import accept_award
 from ..models.award import Award
 from ..services.eligibility import eligibility_summary
-from ..utils.helpers import MAJORS, ACADEMIC_YEARS, format_currency, format_date
+from ..services.scholarship import filter_open_scholarships
+from ..models.saved import SavedScholarship
+from ..utils.helpers import MAJORS, ACADEMIC_YEARS, SCHOLARSHIP_CATEGORIES, format_currency, format_date
 
 
 def student_required(f):
@@ -129,15 +131,16 @@ def profile():
 def scholarships():
     profile = current_user.student_profile
     q = request.args.get("q", "").strip()
+    category = request.args.get("category", "").strip()
+    effort = request.args.get("effort", "").strip()
+    sort = request.args.get("sort", "deadline")
+    min_amount = request.args.get("min_amount", type=float) or 0
 
-    # Only show active scholarships that haven't passed their deadline
-    query = Scholarship.query.filter_by(is_active=True).filter(
-        db.or_(Scholarship.deadline == None, Scholarship.deadline >= date.today())
+    all_scholarships = filter_open_scholarships(
+        q=q, category=category, effort=effort, min_amount=min_amount, sort=sort
     )
-    if q:
-        query = query.filter(Scholarship.title.ilike(f"%{q}%"))
 
-    all_scholarships = query.order_by(Scholarship.deadline.asc().nullslast()).all()
+    saved_ids = {s.scholarship_id for s in profile.saved_scholarships}
 
     enriched = []
     for sch in all_scholarships:
@@ -150,12 +153,22 @@ def scholarships():
             "eligibility": eligibility,
             "already_applied": existing is not None,
             "application_status": existing.status if existing else None,
+            "saved": sch.id in saved_ids,
         })
+
+    # Best matches first when sorting by match
+    if sort == "match":
+        enriched.sort(key=lambda e: e["eligibility"]["match_pct"] or 0, reverse=True)
 
     return render_template(
         "student/scholarships.html",
         scholarships=enriched,
         q=q,
+        category=category,
+        effort=effort,
+        sort=sort,
+        min_amount=min_amount,
+        categories=SCHOLARSHIP_CATEGORIES,
         today=date.today(),
         format_currency=format_currency,
         format_date=format_date,
@@ -238,6 +251,65 @@ def apply(scholarship_id):
         "student/apply.html",
         scholarship=sch,
         eligibility=eligibility,
+        format_currency=format_currency,
+        format_date=format_date,
+    )
+
+
+@student.route("/scholarships/<int:scholarship_id>/save", methods=["POST"])
+@login_required
+@student_required
+def toggle_save(scholarship_id):
+    Scholarship.query.get_or_404(scholarship_id)
+    profile = current_user.student_profile
+
+    existing = SavedScholarship.query.filter_by(
+        student_id=profile.id, scholarship_id=scholarship_id
+    ).first()
+
+    if existing:
+        db.session.delete(existing)
+        db.session.commit()
+        flash("Removed from saved scholarships.", "info")
+    else:
+        db.session.add(SavedScholarship(student_id=profile.id, scholarship_id=scholarship_id))
+        db.session.commit()
+        flash("Scholarship saved.", "success")
+
+    return redirect(request.referrer or url_for("student.scholarships"))
+
+
+@student.route("/saved")
+@login_required
+@student_required
+def saved():
+    profile = current_user.student_profile
+    saved_rows = (
+        profile.saved_scholarships
+        .order_by(SavedScholarship.created_at.desc())
+        .all()
+    )
+
+    enriched = []
+    for row in saved_rows:
+        sch = row.scholarship
+        existing = Application.query.filter_by(
+            student_id=profile.id, scholarship_id=sch.id
+        ).first()
+        enriched.append({
+            "scholarship": sch,
+            "eligibility": eligibility_summary(profile, sch),
+            "already_applied": existing is not None,
+            "application_status": existing.status if existing else None,
+            "saved": True,
+            "expired": sch.deadline and sch.deadline < date.today(),
+            "inactive": not sch.is_active,
+        })
+
+    return render_template(
+        "student/saved.html",
+        scholarships=enriched,
+        today=date.today(),
         format_currency=format_currency,
         format_date=format_date,
     )

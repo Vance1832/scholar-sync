@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Saved Scholarships{% endblock %}
+{% block page_title %}Saved Scholarships{% endblock %}
+{% block page_subtitle %}<p class="page-subtitle">{{ scholarships|length }} scholarship{{ 's' if scholarships|length != 1 }} saved for later</p>{% endblock %}
+
+{% block sidebar %}{% include "shared/sidebar_student.html" %}{% endblock %}
+
+{% block content %}
+{% if scholarships %}
+<div class="scholarship-grid">
+  {% for item in scholarships %}
+    {% include "shared/scholarship_card_student.html" %}
+  {% endfor %}
+</div>
+
+{% else %}
+<div class="empty-state card" style="padding:48px;">
+  <div class="empty-title">Nothing saved yet</div>
+  <div class="empty-desc">Tap the heart on any scholarship to keep it here for later.</div>
+  <a href="{{ url_for('student.scholarships') }}" class="btn btn-primary" style="margin-top:16px;">Browse scholarships</a>
+</div>
+{% endif %}
+{% endblock %}

@@ -54,6 +54,20 @@ MAJORS = [
 
 DONOR_TYPES = ["Individual", "Organization", "Corporate Foundation", "Non-Profit", "Government"]
 
+SCHOLARSHIP_CATEGORIES = [
+    "STEM",
+    "Arts & Humanities",
+    "Business",
+    "Healthcare",
+    "Leadership",
+    "Community Service",
+    "Need-Based",
+    "Merit-Based",
+    "First-Generation",
+    "Athletics",
+    "Other",
+]
+
 ACADEMIC_YEARS = ["Freshman", "Sophomore", "Junior", "Senior", "Graduate", "PhD"]
 
 PAYMENT_METHODS = ["Bank Transfer", "Check", "Direct Deposit", "Cash", "Other"]

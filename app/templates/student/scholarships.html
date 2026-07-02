@@ -7,95 +7,60 @@
 {% block sidebar %}{% include "shared/sidebar_student.html" %}{% endblock %}
 
 {% block content %}
-<div class="section-header">
-  <div></div>
-  <form method="GET" class="search-bar">
+<form method="GET" class="filter-bar" action="{{ url_for('student.scholarships') }}">
+  <div class="filter-search">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+    </svg>
     <input type="text" name="q" value="{{ q }}" placeholder="Search scholarships…">
-    <button type="submit" class="btn btn-secondary">Search</button>
-    {% if q %}<a href="{{ url_for('student.scholarships') }}" class="btn btn-secondary">Clear</a>{% endif %}
-  </form>
-</div>
+  </div>
+
+  <select name="category" aria-label="Category">
+    <option value="">All categories</option>
+    {% for cat in categories %}
+    <option value="{{ cat }}" {{ 'selected' if category == cat }}>{{ cat }}</option>
+    {% endfor %}
+  </select>
+
+  <select name="effort" aria-label="Application effort">
+    <option value="">Any effort</option>
+    <option value="easy" {{ 'selected' if effort == 'easy' }}>Quick apply</option>
+    <option value="essay" {{ 'selected' if effort == 'essay' }}>Essay required</option>
+    <option value="detailed" {{ 'selected' if effort == 'detailed' }}>Detailed</option>
+  </select>
+
+  <select name="min_amount" aria-label="Minimum amount">
+    <option value="">Any amount</option>
+    <option value="1000" {{ 'selected' if min_amount == 1000 }}>$1,000+</option>
+    <option value="2500" {{ 'selected' if min_amount == 2500 }}>$2,500+</option>
+    <option value="5000" {{ 'selected' if min_amount == 5000 }}>$5,000+</option>
+    <option value="10000" {{ 'selected' if min_amount == 10000 }}>$10,000+</option>
+  </select>
+
+  <select name="sort" aria-label="Sort by">
+    <option value="deadline" {{ 'selected' if sort == 'deadline' }}>Deadline soonest</option>
+    <option value="amount" {{ 'selected' if sort == 'amount' }}>Highest amount</option>
+    <option value="match" {{ 'selected' if sort == 'match' }}>Best match</option>
+    <option value="newest" {{ 'selected' if sort == 'newest' }}>Newest</option>
+  </select>
+
+  <button type="submit" class="btn btn-primary">Filter</button>
+  {% if q or category or effort or min_amount %}
+  <a href="{{ url_for('student.scholarships') }}" class="btn btn-secondary">Clear</a>
+  {% endif %}
+</form>
 
 {% if scholarships %}
 <div class="scholarship-grid">
   {% for item in scholarships %}
-  {% set sch = item.scholarship %}
-  {% set elig = item.eligibility %}
-
-  <div class="scholarship-card {% if item.already_applied %}scholarship-card-applied{% endif %}">
-
-    <div class="scholarship-card-top">
-      <div class="scholarship-amount">{{ format_currency(sch.amount) }}</div>
-      <div class="d-flex gap-8 align-center flex-wrap">
-        {% if sch.effort_level == 'easy' %}
-          <span class="effort-tag effort-easy">Quick Apply</span>
-        {% elif sch.effort_level == 'essay' %}
-          <span class="effort-tag effort-essay">Essay Required</span>
-        {% else %}
-          <span class="effort-tag effort-detailed">Detailed</span>
-        {% endif %}
-
-        {% if elig.eligible == true %}
-          <span class="elig-badge elig-met">Eligible</span>
-        {% elif elig.eligible == false %}
-          <span class="elig-badge elig-unmet">Check reqs</span>
-        {% else %}
-          <span class="elig-badge elig-unknown">Profile needed</span>
-        {% endif %}
-      </div>
-    </div>
-
-    <div class="scholarship-card-body">
-      <div class="scholarship-card-title">{{ sch.title }}</div>
-      <div class="scholarship-card-donor">by {{ sch.donor.display_name }}</div>
-
-      {% if sch.description %}
-      <div class="scholarship-card-desc">{{ sch.description[:120] }}{% if sch.description|length > 120 %}…{% endif %}</div>
-      {% endif %}
-
-      <div class="scholarship-card-meta">
-        {% if sch.criteria %}
-          <span>{{ sch.criteria.as_display_string() }}</span>
-        {% else %}
-          <span>Open to all students</span>
-        {% endif %}
-      </div>
-    </div>
-
-    <div class="scholarship-card-footer">
-      <div class="scholarship-deadline">
-        {% if sch.deadline %}
-          {% set delta = (sch.deadline - today).days if today is defined else 99 %}
-          <span class="deadline-label {% if delta <= 7 %}deadline-urgent{% elif delta <= 14 %}deadline-soon{% endif %}">
-            Due {{ format_date(sch.deadline) }}
-            {% if delta <= 7 %}&nbsp;· {{ delta }}d left{% endif %}
-          </span>
-        {% else %}
-          <span class="deadline-label">No deadline</span>
-        {% endif %}
-      </div>
-
-      {% if item.already_applied %}
-        <span class="badge badge-{{ item.application_status }}">
-          {% if item.application_status == 'pending' %}Under Review
-          {% elif item.application_status == 'shortlisted' %}Shortlisted
-          {% elif item.application_status == 'approved' %}Awarded
-          {% elif item.application_status == 'rejected' %}Not Selected
-          {% else %}{{ item.application_status | title }}{% endif %}
-        </span>
-      {% else %}
-        <a href="{{ url_for('student.scholarship_detail', scholarship_id=sch.id) }}" class="btn btn-primary btn-sm">Apply</a>
-      {% endif %}
-    </div>
-
-  </div>
+    {% include "shared/scholarship_card_student.html" %}
   {% endfor %}
 </div>
 
 {% else %}
 <div class="empty-state card" style="padding:48px;">
   <div class="empty-title">No scholarships found</div>
-  <div class="empty-desc">{% if q %}Try a different search term.{% else %}No active scholarships are available right now.{% endif %}</div>
+  <div class="empty-desc">{% if q or category or effort or min_amount %}Try broadening your filters.{% else %}No active scholarships are available right now.{% endif %}</div>
 </div>
 {% endif %}
 {% endblock %}

@@ -10,7 +10,7 @@ from ..services.scholarship import (
 )
 from ..services.application import approve_application, reject_application, shortlist_application, rate_application
 from ..services.award import initiate_disbursement, confirm_payment, get_donor_awards
-from ..utils.helpers import MAJORS, DONOR_TYPES, PAYMENT_METHODS, format_currency, format_date
+from ..utils.helpers import MAJORS, DONOR_TYPES, PAYMENT_METHODS, SCHOLARSHIP_CATEGORIES, format_currency, format_date
 
 
 def donor_required(f):
@@ -145,13 +145,15 @@ def scholarship_new():
             required_major=request.form.get("required_major", ""),
             need_based=request.form.get("need_based") == "1",
             criterion_text=request.form.get("criterion_text", ""),
+            category=request.form.get("category", ""),
+            effort_level=request.form.get("effort_level", "essay"),
         )
         if ok:
             flash(msg, "success")
             return redirect(url_for("donor.scholarships"))
         flash(msg, "danger")
 
-    return render_template("donor/scholarship_form.html", scholarship=None, majors=MAJORS)
+    return render_template("donor/scholarship_form.html", scholarship=None, majors=MAJORS, categories=SCHOLARSHIP_CATEGORIES)
 
 
 @donor.route("/scholarships/<int:scholarship_id>/edit", methods=["GET", "POST"])
@@ -175,13 +177,15 @@ def scholarship_edit(scholarship_id):
             required_major=request.form.get("required_major", ""),
             need_based=request.form.get("need_based") == "1",
             criterion_text=request.form.get("criterion_text", ""),
+            category=request.form.get("category", ""),
+            effort_level=request.form.get("effort_level", "essay"),
         )
         if ok:
             flash(msg, "success")
             return redirect(url_for("donor.scholarships"))
         flash(msg, "danger")
 
-    return render_template("donor/scholarship_form.html", scholarship=sch, majors=MAJORS)
+    return render_template("donor/scholarship_form.html", scholarship=sch, majors=MAJORS, categories=SCHOLARSHIP_CATEGORIES)
 
 
 @donor.route("/applicants")

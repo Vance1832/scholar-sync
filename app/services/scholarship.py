@@ -18,6 +18,41 @@ def get_active_scholarships():
     )
 
 
+def filter_open_scholarships(
+    q: str = "",
+    category: str = "",
+    effort: str = "",
+    min_amount: float = 0,
+    sort: str = "deadline",
+):
+    """Active, non-expired scholarships filtered by search/category/effort/amount and sorted."""
+    query = Scholarship.query.filter_by(is_active=True).filter(
+        db.or_(Scholarship.deadline == None, Scholarship.deadline >= date.today())  # noqa: E711
+    )
+    if q:
+        query = query.filter(
+            db.or_(
+                Scholarship.title.ilike(f"%{q}%"),
+                Scholarship.description.ilike(f"%{q}%"),
+            )
+        )
+    if category:
+        query = query.filter(Scholarship.category == category)
+    if effort in ("easy", "essay", "detailed"):
+        query = query.filter(Scholarship.effort_level == effort)
+    if min_amount:
+        query = query.filter(Scholarship.amount >= min_amount)
+
+    if sort == "amount":
+        query = query.order_by(Scholarship.amount.desc())
+    elif sort == "newest":
+        query = query.order_by(Scholarship.created_at.desc())
+    else:  # deadline (soonest first, no-deadline last)
+        query = query.order_by(Scholarship.deadline.asc().nullslast(), Scholarship.created_at.desc())
+
+    return query.all()
+
+
 def get_donor_scholarships(donor_id: int):
     return (
         Scholarship.query
@@ -38,6 +73,8 @@ def create_scholarship(
     required_major: str,
     need_based: bool,
     criterion_text: str,
+    category: str = "",
+    effort_level: str = "essay",
 ) -> tuple[bool, Optional[Scholarship], str]:
 
     ok, amount, msg = validate_amount(amount_str)
@@ -59,6 +96,8 @@ def create_scholarship(
         amount=amount,
         deadline=deadline,
         is_active=is_active,
+        category=category.strip() or None,
+        effort_level=effort_level if effort_level in ("easy", "essay", "detailed") else "essay",
     )
     db.session.add(scholarship)
     db.session.flush()
@@ -80,6 +119,8 @@ def update_scholarship(
     required_major: str,
     need_based: bool,
     criterion_text: str,
+    category: str = "",
+    effort_level: str = "essay",
 ) -> tuple[bool, str]:
 
     ok, amount, msg = validate_amount(amount_str)
@@ -99,6 +140,8 @@ def update_scholarship(
     scholarship.amount = amount
     scholarship.deadline = deadline
     scholarship.is_active = is_active
+    scholarship.category = category.strip() or None
+    scholarship.effort_level = effort_level if effort_level in ("easy", "essay", "detailed") else "essay"
 
     _upsert_criteria(scholarship.id, gpa, required_major, need_based, criterion_text)
 

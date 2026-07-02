@@ -37,9 +37,37 @@ def check_eligibility(student: Student, scholarship: Scholarship) -> tuple[bool,
     return len(reasons) == 0, reasons
 
 
+def match_score(student: Optional[Student], scholarship: Scholarship) -> Optional[int]:
+    """
+    Percentage of verifiable eligibility checks the student passes (0–100).
+    Only GPA and major can be verified from the profile; need-based and
+    free-text criteria are self-attested at application time and excluded.
+    No verifiable criteria means the scholarship is open — 100.
+    Returns None when there is no completed profile to score against.
+    """
+    if student is None or not student.profile_completed:
+        return None
+
+    criteria = scholarship.criteria
+    if not criteria:
+        return 100
+
+    checks: list[bool] = []
+    if criteria.min_gpa:
+        checks.append(student.gpa_float >= float(criteria.min_gpa))
+    if criteria.required_major and criteria.required_major not in ("", "Any Major"):
+        checks.append(
+            (student.major or "").strip().lower() == criteria.required_major.strip().lower()
+        )
+
+    if not checks:
+        return 100
+    return round(100 * sum(checks) / len(checks))
+
+
 def eligibility_summary(student: Optional[Student], scholarship: Scholarship) -> dict:
     """
-    Returns a dict with keys: eligible, reasons, label, css_class.
+    Returns a dict with keys: eligible, reasons, label, css_class, match_pct.
     Safe to call with student=None (e.g. incomplete profile).
     """
     if student is None or not student.profile_completed:
@@ -48,9 +76,11 @@ def eligibility_summary(student: Optional[Student], scholarship: Scholarship) ->
             "reasons": [],
             "label": "Complete your profile to check eligibility",
             "css_class": "status-neutral",
+            "match_pct": None,
         }
 
     eligible, reasons = check_eligibility(student, scholarship)
+    pct = match_score(student, scholarship)
 
     if eligible:
         return {
@@ -58,10 +88,12 @@ def eligibility_summary(student: Optional[Student], scholarship: Scholarship) ->
             "reasons": [],
             "label": "You meet all requirements",
             "css_class": "status-success",
+            "match_pct": pct,
         }
     return {
         "eligible": False,
         "reasons": reasons,
         "label": "You may not meet all requirements",
         "css_class": "status-warning",
+        "match_pct": pct,
     }
