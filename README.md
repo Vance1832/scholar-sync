@@ -1,8 +1,22 @@
 # ScholarSync
 
+![tests](https://github.com/Vance1832/scholar-sync/actions/workflows/tests.yml/badge.svg)
+
 A full-stack scholarship management platform that connects students with donors — built around the real-world workflow of applying, reviewing, and disbursing scholarship funds, not just a CRUD demo.
 
 **Live app:** [scholar-sync-bext.onrender.com](https://scholar-sync-bext.onrender.com)
+
+---
+
+## Screenshots
+
+| Landing page | Public browse with filters |
+|---|---|
+| ![Landing page](docs/screenshots/landing.jpg) | ![Browse scholarships](docs/screenshots/browse.jpg) |
+
+| Scholarship detail | Sign in |
+|---|---|
+| ![Scholarship detail](docs/screenshots/detail.jpg) | ![Sign in](docs/screenshots/login.jpg) |
 
 ---
 
@@ -99,6 +113,15 @@ flask seed-demo
 ```
 
 This creates 4 donor organizations, 12 scholarships across categories, and 3 students with applications in every review state. All demo accounts use password `demo1234` (e.g. student `devon_r`, donor `hartwell`).
+
+## Tests
+
+Service-layer and route tests cover eligibility/match scoring, input validation, auth (registration, role enforcement, suspension, open-redirect protection), and scholarship filtering:
+
+```bash
+pip install -r requirements-dev.txt
+python -m pytest tests/
+```
 
 ### Optional: enable email notifications
 

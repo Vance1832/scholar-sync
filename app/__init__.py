@@ -35,6 +35,11 @@ def create_app(config_name: str = "default") -> Flask:
     _register_error_handlers(app)
     _register_cli(app)
 
+    @app.context_processor
+    def inject_globals():
+        from datetime import date
+        return {"current_year": date.today().year}
+
     return app
 
 
